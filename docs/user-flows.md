@@ -1,8 +1,9 @@
 # Key user flows
 
-Four flows worth understanding end to end: how a visitor becomes a paying client, how a
-purchased package becomes a running project, how a running project produces a result, and how a
-validated result turns into a build. Each maps to real routes and data in this codebase.
+Five flows worth understanding end to end: how a visitor becomes a paying client, how a
+purchased package becomes a running project, how a running project produces a result, how a
+validated result turns into a build, and how WhatHits' own outbound marketing gets tracked. Each
+maps to real routes and data in this codebase.
 
 ## 1. Client onboarding — visitor to paid project
 
@@ -89,3 +90,26 @@ The seed data (`prisma/seed.ts`) models exactly this: **Project A** (Q2 Idea Bat
 Sprint, `COMPLETE`) validates Ledger, and **Project B** (Ledger — Presale Sprint, `TESTING`) is
 that same idea one step further down this flow — a second `Project` row, not a status change on
 the first, because it's a separately-scoped, separately-billed engagement.
+
+## 5. Outbound email campaign — draft to tracked engagement
+
+This is WhatHits' own top-of-funnel marketing (emailing prospective clients to sell the service
+above) — separate from every flow so far, which is about running a client's *own* project. See
+[email-campaigns.md](./email-campaigns.md) for the full writeup.
+
+```mermaid
+flowchart TD
+    A["/admin/campaigns/new\nname, subject, recipient list pasted in"] --> B["POST /api/admin/email-campaigns\nEmailCampaign created, status: DRAFT\nEmailRecipient rows created, status: PENDING"]
+    B --> C{"Sent through\nan ESP yet?"}
+    C -- "Not yet — settings pending" --> D["Campaign sits as a draft,\nvisible on /admin but not sending"]
+    C -- "Yes, once an ESP is wired up" --> E["Provider sends the campaign\n(outside this app — see email-campaigns.md)"]
+    E --> F["Provider webhook →\nPOST /api/webhooks/email\n(normalized event: sent/opened/clicked/bounced/...)"]
+    F --> G["EmailRecipient status + rollup fields updated\n(monotonic — can't be downgraded by an\nout-of-order webhook)"]
+    F --> H["EmailEvent row appended\n(full audit log)"]
+    G --> I["/admin/campaigns/[id]\nfunnel + per-recipient opens/clicks,\nsearchable, sorted by engagement"]
+    H --> I
+```
+
+Steps A and B are built and working today — you can create a campaign and track it before any
+ESP is wired up. Step E (actually sending) is the one piece deliberately left for once sending
+settings are provided.

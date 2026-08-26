@@ -30,9 +30,10 @@ npm run db:seed       # loads demo client, projects, ideas, campaigns, reports
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) for the marketing site, and
-[http://localhost:3000/dashboard](http://localhost:3000/dashboard) for the client portal (reads
-the seeded demo client — see [Auth note](#auth-note) below).
+Open [http://localhost:3000](http://localhost:3000) for the marketing site,
+[http://localhost:3000/dashboard](http://localhost:3000/dashboard) for the client portal, and
+[http://localhost:3000/admin](http://localhost:3000/admin) for the internal email-campaign
+tracker (see [Auth note](#auth-note) below — neither portal has real auth yet).
 
 ## Project structure
 
@@ -52,17 +53,25 @@ src/
       page.tsx             Overview
       projects/[id]/       Ideas, campaigns, live metrics for one project
       reports/[id]/         Full validation report (see docs/validation-report-template.md)
+    admin/                 Internal-only — WhatHits' own email marketing (not client-facing)
+      page.tsx               Overview across all campaigns
+      campaigns/[id]/         Funnel + per-recipient opens/clicks (see docs/email-campaigns.md)
+      campaigns/new/          Create a campaign + paste in a recipient list
     api/
       checkout/            Creates a Stripe Checkout Session
       webhooks/stripe/      Records paid Orders
+      webhooks/email/       Provider-agnostic engagement-event ingestion (opens/clicks/bounces)
       contact/              Persists ContactSubmission rows
+      admin/email-campaigns/  Creates a draft EmailCampaign + recipients
     layout.tsx            Root layout: fonts, theme provider, analytics, toaster
   components/
     ui/                  shadcn/ui primitives
+    portal/                Shared sidebar/mobile-nav shell used by both /dashboard and /admin
     marketing/            Site header/footer, hero, pricing cards, FAQ, etc.
-    dashboard/            Sidebar, metric cards, status badges, report banner
+    dashboard/            Client-portal-specific pieces (report banner, print button)
+    admin/                 Email funnel, recipient table, new-campaign form
   content/               Typed content: packages, pricing comparison matrix, process steps, FAQs
-  lib/                   prisma client, stripe client, format helpers, metrics aggregation
+  lib/                   prisma client, stripe client, format/metrics helpers
 content/
   case-studies/*.mdx      3 illustrative case studies (frontmatter + MDX body)
   blog/*.mdx               2 blog posts
@@ -73,6 +82,7 @@ docs/
   database-schema.md        Schema rationale + ER diagram
   user-flows.md              4 key flows, with diagrams, mapped to real routes/code
   validation-report-template.md   The report template structure, field by field
+  email-campaigns.md          Email tracking: what's built, how to wire a real ESP later
   brand-and-domains.md       Domain suggestions for whathits.*
 ```
 
@@ -97,12 +107,23 @@ To go live:
 3. Point a Stripe webhook at `/api/webhooks/stripe` for `checkout.session.completed`, set
    `STRIPE_WEBHOOK_SECRET`
 
+## Email campaign tracking
+
+`/admin` is where WhatHits' own outbound marketing (emailing prospective clients) gets tracked —
+opens, clicks, bounces, and a per-recipient breakdown of who's engaging. It's separate from a
+client's idea being tested via email as part of their project (that's `Channel.EMAIL` in the main
+schema). No email provider is wired up for sending yet; see
+[`docs/email-campaigns.md`](docs/email-campaigns.md) for what's built now, what's deliberately
+not, and how to connect a real ESP once one's chosen.
+
 ## Auth note
 
-The dashboard has no real authentication — it's a placeholder client portal reading live rows
-from the database for one seeded demo client (`jordan@northbeamstudio.co`). Every dashboard page
-reads through a single function, [`getCurrentUser()`](src/lib/current-user.ts); swapping in real
-auth (NextAuth, Clerk, etc.) means changing that one file, not every page.
+Neither portal has real authentication — both are placeholders reading live rows from the
+database. `/dashboard` reads one seeded demo client (`jordan@northbeamstudio.co`) through
+[`getCurrentUser()`](src/lib/current-user.ts); `/admin` reads one seeded internal user
+(`ops@whathits.co`) through [`getCurrentAdmin()`](src/lib/current-admin.ts). Every page in each
+portal reads through its one function, so swapping in real auth (NextAuth, Clerk, etc.) means
+changing those two files, not every page.
 
 ## Scripts
 
