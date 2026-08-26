@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Scale, Zap, Megaphone, Compass } from "lucide-react";
 
 import { Section, SectionHeading } from "@/components/marketing/section";
 import { CTASection } from "@/components/marketing/cta-section";
@@ -14,21 +15,25 @@ const VALUES = [
     title: "Evidence over opinion",
     detail:
       "Internal debates about which idea is 'obviously' the right one get settled by data from outside the building, not by whoever argues loudest in the room.",
+    icon: Scale,
   },
   {
     title: "Speed without shortcuts",
     detail:
       "Fast doesn't mean sloppy. We compress the calendar, not the rigor — real traffic, real thresholds, real sample sizes, just run efficiently.",
+    icon: Zap,
   },
   {
     title: "Say the uncomfortable thing",
     detail:
       "If the data says no, we say no — in writing, with the reasoning attached. A validation partner who only ever says yes isn't validating anything.",
+    icon: Megaphone,
   },
   {
     title: "Leave clients better equipped, not dependent",
     detail:
       "You get the domain, the dashboard, the leads, and the report. Whether or not you build with us, you're not locked into needing us again.",
+    icon: Compass,
   },
 ];
 
@@ -76,8 +81,14 @@ export default function AboutPage() {
         <SectionHeading eyebrow="How we operate" title="What we actually believe" center={false} />
         <div className="mt-10 grid gap-6 sm:grid-cols-2">
           {VALUES.map((v) => (
-            <div key={v.title} className="rounded-xl border border-border bg-card p-6">
-              <h3 className="text-base font-semibold text-foreground">{v.title}</h3>
+            <div
+              key={v.title}
+              className="rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/40"
+            >
+              <span className="flex size-9 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+                <v.icon className="size-4.5" />
+              </span>
+              <h3 className="mt-4 text-base font-semibold text-foreground">{v.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{v.detail}</p>
             </div>
           ))}

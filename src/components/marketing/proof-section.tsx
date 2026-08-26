@@ -11,7 +11,7 @@ export function ProofSection({ caseStudies }: { caseStudies: CaseStudy[] }) {
         <Link
           key={cs.slug}
           href={`/case-studies/${cs.slug}`}
-          className="group flex flex-col rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/40"
+          className="group flex flex-col rounded-xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20"
         >
           <div className="flex items-center justify-between gap-2">
             <Badge variant="outline">{cs.segment}</Badge>

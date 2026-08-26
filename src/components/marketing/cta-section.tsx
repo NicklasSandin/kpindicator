@@ -13,6 +13,10 @@ export function CTASection({
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card px-6 py-14 text-center sm:px-12 sm:py-20">
       <div className="bg-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black_10%,transparent_100%)] opacity-30" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[28rem] w-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/15 opacity-40 blur-[100px]"
+      />
       <div className="relative">
         <h2 className="mx-auto max-w-xl text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {title}
@@ -29,6 +33,9 @@ export function CTASection({
             <Link href="/contact">Book a validation call</Link>
           </Button>
         </div>
+        <p className="mt-5 text-xs text-muted-foreground">
+          Flat pricing. No retainer. You keep everything either way.
+        </p>
       </div>
     </div>
   );

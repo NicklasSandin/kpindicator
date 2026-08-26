@@ -9,6 +9,7 @@ import { ProofSection } from "@/components/marketing/proof-section";
 import { WhoItsFor } from "@/components/marketing/who-its-for";
 import { FAQAccordion } from "@/components/marketing/faq-accordion";
 import { CTASection } from "@/components/marketing/cta-section";
+import { AlternativesTable } from "@/components/marketing/alternatives-table";
 import { Button } from "@/components/ui/button";
 import { getCaseStudies } from "@/lib/content";
 import { FAQS } from "@/content/faqs";
@@ -20,6 +21,17 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+
+      <Section>
+        <SectionHeading
+          eyebrow="Why not just…"
+          title="Everyone finds out eventually. The question is what it costs to find out."
+          description="Three ways teams usually answer 'will this work,' and why none of them hold up next to real behavioral data."
+        />
+        <div className="mt-12">
+          <AlternativesTable />
+        </div>
+      </Section>
 
       <Section>
         <SectionHeading

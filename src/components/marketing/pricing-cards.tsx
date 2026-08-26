@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, KeyRound, Ban, FileCheck2 } from "lucide-react";
 
 import { PACKAGES, INTRO_PRICING_NOTE } from "@/content/packages";
 import { formatCents } from "@/lib/format";
@@ -15,8 +15,10 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
             key={pkg.id}
             id={pkg.id}
             className={cn(
-              "flex scroll-mt-24 flex-col rounded-xl border border-border bg-card p-6",
-              pkg.featured && "border-primary/50 ring-1 ring-primary/20",
+              "flex scroll-mt-24 flex-col rounded-xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20",
+              pkg.featured
+                ? "border-primary/50 ring-1 ring-primary/20"
+                : "hover:border-primary/40",
             )}
           >
             {pkg.featured && (
@@ -54,6 +56,21 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-10 flex flex-col items-center gap-4 border-t border-border pt-8 sm:flex-row sm:justify-center sm:gap-8">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Ban className="size-4 shrink-0 text-primary" />
+          No retainer, ever
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <KeyRound className="size-4 shrink-0 text-primary" />
+          You keep the domain, data & leads either way
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <FileCheck2 className="size-4 shrink-0 text-primary" />
+          A no-go is a complete, written answer
+        </div>
       </div>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">

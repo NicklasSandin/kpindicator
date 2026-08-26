@@ -14,7 +14,7 @@ export function Logo({ className }: { className?: string }) {
         <span className="absolute inset-0 rounded-md ring-1 ring-inset ring-black/10" />
         <span className="size-1.5 rounded-full bg-current" />
       </span>
-      What<span className="text-primary">Hits</span>
+      KP<span className="text-primary">Indicator</span>
     </Link>
   );
 }
