@@ -110,7 +110,7 @@ conversation between "paid" and "project scoped and kicked off," and forcing a 1
 make that gap invisible instead of modelable.
 
 **`EmailCampaign` → `EmailRecipient` → `EmailEvent` is the same append-only-events-rolled-into-
-current-state shape as `Campaign` → `MetricSnapshot`, applied to WhatHits' own outbound
+current-state shape as `Campaign` → `MetricSnapshot`, applied to KPIndicator's own outbound
 marketing** (emailing prospective clients — not to be confused with a client's idea being
 tested via email, which is `Channel.EMAIL` above). `EmailRecipient` holds fast-to-query rollup
 fields (status, open/click counts, last-opened timestamp); `EmailEvent` holds the full log, so

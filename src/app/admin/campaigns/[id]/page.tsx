@@ -19,7 +19,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const campaign = await prisma.emailCampaign.findUnique({ where: { id } });
-  return { title: { absolute: `${campaign?.name ?? "Campaign"} — WhatHits Admin` } };
+  return { title: { absolute: `${campaign?.name ?? "Campaign"} — KPIndicator Admin` } };
 }
 
 export default async function AdminCampaignDetailPage({

@@ -2,7 +2,7 @@
 
 Five flows worth understanding end to end: how a visitor becomes a paying client, how a
 purchased package becomes a running project, how a running project produces a result, how a
-validated result turns into a build, and how WhatHits' own outbound marketing gets tracked. Each
+validated result turns into a build, and how KPIndicator's own outbound marketing gets tracked. Each
 maps to real routes and data in this codebase.
 
 ## 1. Client onboarding — visitor to paid project
@@ -13,7 +13,7 @@ flowchart LR
     B -- "No, needs to talk it through" --> C["/contact form\n(src/components/marketing/contact-form.tsx)"]
     B -- "Yes, ready to buy" --> D["/pricing\nselects a package"]
     C --> E[ContactSubmission row created]
-    E --> F[WhatHits replies within 1 business day]
+    E --> F[KPIndicator replies within 1 business day]
     F --> D
     D --> G["CheckoutButton → POST /api/checkout\n(src/app/api/checkout/route.ts)"]
     G --> H[Stripe Checkout Session]
@@ -93,7 +93,7 @@ the first, because it's a separately-scoped, separately-billed engagement.
 
 ## 5. Outbound email campaign — draft to tracked engagement
 
-This is WhatHits' own top-of-funnel marketing (emailing prospective clients to sell the service
+This is KPIndicator's own top-of-funnel marketing (emailing prospective clients to sell the service
 above) — separate from every flow so far, which is about running a client's *own* project. See
 [email-campaigns.md](./email-campaigns.md) for the full writeup.
 

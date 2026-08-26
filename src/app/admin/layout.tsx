@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   // title still gets wrapped by the ROOT layout's template regardless — so
   // every admin page below sets title.absolute to fully opt out and control
   // its own title verbatim.
-  title: { absolute: "WhatHits Admin" },
+  title: { absolute: "KPIndicator Admin" },
   // Keep this out of search results and off the public sitemap — it's not
   // linked from the marketing site or the client dashboard on purpose.
   robots: { index: false, follow: false },

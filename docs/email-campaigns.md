@@ -1,6 +1,6 @@
 # Email campaign tracking
 
-WhatHits' own outbound marketing (emailing prospective clients), tracked at `/admin` — separate
+KPIndicator's own outbound marketing (emailing prospective clients), tracked at `/admin` — separate
 from a client's idea being tested via email outreach as part of their project (that's
 `Campaign` / `Channel.EMAIL` in the main schema; see [database-schema.md](./database-schema.md)).
 
@@ -48,7 +48,7 @@ normalized event shape:
   "campaignId": "cm...",
   "recipientId": "cm...",
   "occurredAt": "2026-08-26T12:00:00Z",
-  "url": "https://whathits.co/pricing"
+  "url": "https://kpindicator.co/pricing"
 }
 ```
 

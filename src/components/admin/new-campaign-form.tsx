@@ -77,11 +77,11 @@ export function NewCampaignForm() {
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="fromName">From name (optional)</Label>
-          <Input id="fromName" name="fromName" maxLength={200} placeholder="Sam at WhatHits" />
+          <Input id="fromName" name="fromName" maxLength={200} placeholder="Sam at KPIndicator" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="fromEmail">From email (optional)</Label>
-          <Input id="fromEmail" name="fromEmail" type="email" placeholder="sam@whathits.co" />
+          <Input id="fromEmail" name="fromEmail" type="email" placeholder="sam@kpindicator.co" />
         </div>
       </div>
 

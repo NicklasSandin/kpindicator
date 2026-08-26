@@ -9,7 +9,7 @@ import { getCaseStudies } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Case Studies",
-  description: "How the WhatHits process reads in practice, across a startup studio, a corporate innovation team, and an agency.",
+  description: "How the KPIndicator process reads in practice, across a startup studio, a corporate innovation team, and an agency.",
 };
 
 export default function CaseStudiesPage() {
@@ -21,7 +21,7 @@ export default function CaseStudiesPage() {
         <SectionHeading
           eyebrow="Case studies"
           title="How this reads in practice"
-          description="Illustrative examples built to show how a WhatHits report actually reads. Case studies from our founding cohort's real engagements are being published as they complete."
+          description="Illustrative examples built to show how a KPIndicator report actually reads. Case studies from our founding cohort's real engagements are being published as they complete."
         />
       </Section>
 

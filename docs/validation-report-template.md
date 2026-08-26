@@ -1,6 +1,6 @@
 # Validation report template
 
-Every report WhatHits delivers — from a $995 Idea Check assessment to a $8,500 Presale Sprint
+Every report KPIndicator delivers — from a $995 Idea Check assessment to a $8,500 Presale Sprint
 results report — follows the same structure. Consistency matters here on purpose: a client
 running five reports side by side (a Validation Sprint) should be able to compare them without
 re-learning a format each time.

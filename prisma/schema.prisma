@@ -1,8 +1,8 @@
-// WhatHits data model
+// KPIndicator data model
 // Covers the client portal: projects (packages purchased), the ideas inside
 // each project, the campaigns run to test each idea, the raw metric
 // snapshots those campaigns produce, the resulting reports, and orders
-// (Stripe payments) that fund it all. Also covers WhatHits' own outbound
+// (Stripe payments) that fund it all. Also covers KPIndicator's own outbound
 // marketing email tracking (EmailCampaign/EmailRecipient/EmailEvent) — see
 // the comment above those models.
 //
@@ -235,7 +235,7 @@ model Order {
 }
 
 // --- Outbound marketing email tracking -------------------------------
-// This is WhatHits' own top-of-funnel marketing (emailing prospective
+// This is KPIndicator's own top-of-funnel marketing (emailing prospective
 // clients), not to be confused with Campaign/Channel.EMAIL above, which is
 // a client's idea being tested via email outreach as part of their project.
 // Sending is provider-agnostic on purpose — see /api/webhooks/email and

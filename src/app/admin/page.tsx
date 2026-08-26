@@ -9,7 +9,7 @@ import { MetricCard } from "@/components/metric-card";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = { title: { absolute: "Overview — WhatHits Admin" } };
+export const metadata: Metadata = { title: { absolute: "Overview — KPIndicator Admin" } };
 
 export default async function AdminOverviewPage() {
   const campaigns = await prisma.emailCampaign.findMany({
@@ -26,7 +26,7 @@ export default async function AdminOverviewPage() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Marketing overview</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            How WhatHits&apos; own outbound email campaigns are performing — opens, clicks, and
+            How KPIndicator&apos; own outbound email campaigns are performing — opens, clicks, and
             everything in between.
           </p>
         </div>

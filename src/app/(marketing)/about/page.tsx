@@ -6,7 +6,7 @@ import { CTASection } from "@/components/marketing/cta-section";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "WhatHits exists because building first and validating later is the most expensive way to find out an idea doesn't work. Here's how we operate instead.",
+    "KPIndicator exists because building first and validating later is the most expensive way to find out an idea doesn't work. Here's how we operate instead.",
 };
 
 const VALUES = [
@@ -39,7 +39,7 @@ export default function AboutPage() {
         <SectionHeading
           eyebrow="About"
           title="We got tired of watching good teams build the wrong thing well"
-          description="WhatHits exists because 'build first, validate later' is the most expensive way to find out an idea doesn't work — and almost everyone still does it that way."
+          description="KPIndicator exists because 'build first, validate later' is the most expensive way to find out an idea doesn't work — and almost everyone still does it that way."
         />
       </Section>
 
@@ -59,7 +59,7 @@ export default function AboutPage() {
             as market research.
           </p>
           <p>
-            We built WhatHits to run the test that actually answers the question: put a specific offer
+            We built KPIndicator to run the test that actually answers the question: put a specific offer
             in front of real people, spend real budget getting it seen, and measure what they actually
             do. Not what they say they&apos;d do. Not what a model predicts they&apos;d do. What they
             click, sign up for, and pay a deposit toward.

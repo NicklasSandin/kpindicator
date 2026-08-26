@@ -60,7 +60,7 @@ export function SiteFooter() {
           ))}
         </div>
         <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} WhatHits. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} KPIndicator. All rights reserved.</p>
           <p>Real traffic. Real reports. No hedging.</p>
         </div>
       </div>

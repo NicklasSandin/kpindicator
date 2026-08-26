@@ -62,7 +62,7 @@ export default async function ReportDetailPage({
       {/* Report letterhead */}
       <div className="mt-6 rounded-xl border border-border bg-card p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">WhatHits</span>
+          <span className="font-semibold text-foreground">KPIndicator</span>
           <span>&middot;</span>
           <span>Validation Report</span>
           <span>&middot;</span>
@@ -120,7 +120,7 @@ export default async function ReportDetailPage({
 
       <div className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
         <p>
-          Prepared by WhatHits for {report.project.name}. Recommendations reflect the data
+          Prepared by KPIndicator for {report.project.name}. Recommendations reflect the data
           available as of {formatDate(report.publishedAt ?? report.createdAt)} against
           thresholds agreed before testing began.
         </p>

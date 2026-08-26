@@ -8,7 +8,7 @@ import { formatDate, formatNumber, formatPercent } from "@/lib/format";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = { title: { absolute: "Email campaigns — WhatHits Admin" } };
+export const metadata: Metadata = { title: { absolute: "Email campaigns — KPIndicator Admin" } };
 
 export default async function AdminCampaignsPage() {
   const campaigns = await prisma.emailCampaign.findMany({

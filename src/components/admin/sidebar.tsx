@@ -10,5 +10,5 @@ export const ADMIN_NAV: PortalNavItem[] = [
 ];
 
 export function AdminSidebar({ userName }: { userName: string }) {
-  return <PortalSidebar items={ADMIN_NAV} userName={userName} userSubtitle="WhatHits internal" />;
+  return <PortalSidebar items={ADMIN_NAV} userName={userName} userSubtitle="KPIndicator internal" />;
 }

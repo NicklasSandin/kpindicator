@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { NewCampaignForm } from "@/components/admin/new-campaign-form";
 
-export const metadata: Metadata = { title: { absolute: "New campaign — WhatHits Admin" } };
+export const metadata: Metadata = { title: { absolute: "New campaign — KPIndicator Admin" } };
 
 export default function NewCampaignPage() {
   return (

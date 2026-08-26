@@ -22,22 +22,22 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "WhatHits — Test what hits before you build it",
-    template: "%s — WhatHits",
+    default: "KPIndicator — Test what hits before you build it",
+    template: "%s — KPIndicator",
   },
   description:
-    "WhatHits runs real traffic against your 3-5 best ideas, measures what actually converts, and hands you a clear go/no-go — then builds the one that hits.",
+    "KPIndicator runs real traffic against your 3-5 best ideas, measures what actually converts, and hands you a clear go/no-go — then builds the one that hits.",
   openGraph: {
-    title: "WhatHits — Test what hits before you build it",
+    title: "KPIndicator — Test what hits before you build it",
     description:
       "Done-for-you market validation. Real landing pages, real traffic, real demand data — before you spend a dollar building.",
     url: siteUrl,
-    siteName: "WhatHits",
+    siteName: "KPIndicator",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "WhatHits — Test what hits before you build it",
+    title: "KPIndicator — Test what hits before you build it",
     description:
       "Done-for-you market validation. Real traffic, real demand data, a clear go/no-go — before you build.",
   },

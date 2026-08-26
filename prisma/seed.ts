@@ -48,10 +48,10 @@ async function main() {
 
   const admin = await prisma.user.create({
     data: {
-      email: "ops@whathits.co",
-      name: "WhatHits Ops",
+      email: "ops@kpindicator.co",
+      name: "KPIndicator Ops",
       role: "ADMIN",
-      company: "WhatHits",
+      company: "KPIndicator",
     },
   });
 
@@ -90,7 +90,7 @@ async function main() {
       targetCustomer: "Owner-operator landscaping & lawn care businesses, 1-5 employees, US.",
       priorityRank: 1,
       status: "VALIDATED" as const,
-      landingPageUrl: "https://get.whathits.co/ledger",
+      landingPageUrl: "https://get.kpindicator.co/ledger",
       channels: [Channel.PAID_SOCIAL, Channel.EMAIL] as Channel[],
       recommendation: "GO" as const,
     },
@@ -102,7 +102,7 @@ async function main() {
       targetCustomer: "Small fleet owners (landscaping, HVAC, delivery), 3-15 vehicles.",
       priorityRank: 2,
       status: "INCONCLUSIVE" as const,
-      landingPageUrl: "https://get.whathits.co/fleetwise",
+      landingPageUrl: "https://get.kpindicator.co/fleetwise",
       channels: [Channel.PAID_SOCIAL, Channel.OUTREACH] as Channel[],
       recommendation: "MORE_DATA_NEEDED" as const,
     },
@@ -114,7 +114,7 @@ async function main() {
       targetCustomer: "Airbnb hosts with 2+ active listings, non-superhost tier.",
       priorityRank: 3,
       status: "INVALIDATED" as const,
-      landingPageUrl: "https://get.whathits.co/homebase-pro",
+      landingPageUrl: "https://get.kpindicator.co/homebase-pro",
       channels: [Channel.PAID_SOCIAL, Channel.EMAIL] as Channel[],
       recommendation: "NO_GO" as const,
     },
@@ -126,7 +126,7 @@ async function main() {
       targetCustomer: "First-time solo founders, pre-seed, US & UK.",
       priorityRank: 4,
       status: "INCONCLUSIVE" as const,
-      landingPageUrl: "https://get.whathits.co/pitchdeck-ai",
+      landingPageUrl: "https://get.kpindicator.co/pitchdeck-ai",
       channels: [Channel.EMAIL, Channel.OUTREACH] as Channel[],
       recommendation: "MORE_DATA_NEEDED" as const,
     },
@@ -245,7 +245,7 @@ async function main() {
       targetCustomer: "Owner-operator landscaping & lawn care businesses, 1-5 employees, US.",
       priorityRank: 1,
       status: "TESTING",
-      landingPageUrl: "https://get.whathits.co/ledger-presale",
+      landingPageUrl: "https://get.kpindicator.co/ledger-presale",
       createdAt: daysAgo(18),
     },
   });
@@ -323,7 +323,7 @@ async function main() {
   });
 
   // ---------------------------------------------------------------------
-  // Outbound marketing email campaigns (WhatHits' own, not a client's)
+  // Outbound marketing email campaigns (KPIndicator's own, not a client's)
   // ---------------------------------------------------------------------
   const emailCampaignCount = await seedEmailCampaigns();
 
@@ -406,7 +406,7 @@ async function seedRecipient({
     events.push({
       type: EmailEventType.CLICKED,
       occurredAt: hoursAfter(sentAt, int(3, 100) + i * 5),
-      url: "https://whathits.co/pricing",
+      url: "https://kpindicator.co/pricing",
     });
   }
 
@@ -476,8 +476,8 @@ async function seedEmailCampaigns() {
       name: "Founding Cohort Outreach — Batch 1",
       subject: "Test it before you build it (founding pricing inside)",
       previewText: "We validate 3-5 of your ideas with real traffic before you write a line of code.",
-      fromName: "Sam at WhatHits",
-      fromEmail: "sam@whathits.co",
+      fromName: "Sam at KPIndicator",
+      fromEmail: "sam@kpindicator.co",
       audience: "Cold list — 16 startup studio & solo founder contacts (AngelList + LinkedIn export)",
       status: "SENT",
       sentAt: daysAgo(12),
@@ -513,8 +513,8 @@ async function seedEmailCampaigns() {
       name: "Case Study Follow-up — Corporate Innovation",
       subject: "How one team killed 2 of 3 internal bets before the board meeting",
       previewText: "A steering-committee decision that took 19 minutes instead of 90.",
-      fromName: "Sam at WhatHits",
-      fromEmail: "sam@whathits.co",
+      fromName: "Sam at KPIndicator",
+      fromEmail: "sam@kpindicator.co",
       audience: "Warm list — corporate innovation leads who downloaded the process one-pager",
       status: "SENT",
       sentAt: daysAgo(3),

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 export const metadata: Metadata = {
   title: "Process",
   description:
-    "The eight-step process WhatHits runs on every engagement: intake, positioning, landing pages, multi-channel demand testing, measurement, qualification, reporting, and build.",
+    "The eight-step process KPIndicator runs on every engagement: intake, positioning, landing pages, multi-channel demand testing, measurement, qualification, reporting, and build.",
 };
 
 const PRINCIPLES = [
