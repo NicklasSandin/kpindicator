@@ -1,0 +1,64 @@
+import { Check } from "lucide-react";
+
+import { PACKAGES, INTRO_PRICING_NOTE } from "@/content/packages";
+import { formatCents } from "@/lib/format";
+import { Badge } from "@/components/ui/badge";
+import { CheckoutButton } from "@/components/marketing/checkout-button";
+import { cn } from "@/lib/utils";
+
+export function PricingCards({ compact = false }: { compact?: boolean }) {
+  return (
+    <div>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {PACKAGES.map((pkg) => (
+          <div
+            key={pkg.id}
+            id={pkg.id}
+            className={cn(
+              "flex scroll-mt-24 flex-col rounded-xl border border-border bg-card p-6",
+              pkg.featured && "border-primary/50 ring-1 ring-primary/20",
+            )}
+          >
+            {pkg.featured && (
+              <Badge className="mb-3 w-fit">Most popular</Badge>
+            )}
+            <h3 className="text-lg font-semibold text-foreground">{pkg.name}</h3>
+            <p className="mt-1.5 text-sm text-muted-foreground">{pkg.tagline}</p>
+
+            <div className="mt-5 flex items-baseline gap-1.5">
+              <span className="text-3xl font-semibold tracking-tight text-foreground">
+                {formatCents(pkg.priceCents)}
+              </span>
+              <span className="text-sm text-muted-foreground">/ idea</span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{pkg.duration}</p>
+
+            {!compact && (
+              <ul className="mt-6 space-y-2.5">
+                {pkg.includes.map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-foreground/90">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-auto pt-6">
+              <CheckoutButton
+                packageId={pkg.id}
+                variant={pkg.featured ? "default" : "outline"}
+                label={`Start ${pkg.name}`}
+                className="w-full"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">Founding pricing:</span> {INTRO_PRICING_NOTE}
+      </p>
+    </div>
+  );
+}

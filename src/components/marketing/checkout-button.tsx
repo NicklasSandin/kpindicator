@@ -1,0 +1,63 @@
+"use client";
+
+import * as React from "react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import type { PackageId } from "@/content/packages";
+import { cn } from "@/lib/utils";
+
+export function CheckoutButton({
+  packageId,
+  label = "Get started",
+  variant = "default",
+  className,
+}: {
+  packageId: PackageId;
+  label?: string;
+  variant?: React.ComponentProps<typeof Button>["variant"];
+  className?: string;
+}) {
+  const [loading, setLoading] = React.useState(false);
+
+  async function handleClick() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageId }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      toast.error(data.error ?? "Something went wrong starting checkout.", {
+        description: "Book a call instead and we'll set it up manually.",
+        action: { label: "Contact us", onClick: () => (window.location.href = "/contact") },
+      });
+    } catch {
+      toast.error("Couldn't reach checkout. Please try again or contact us directly.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Button
+      variant={variant}
+      className={cn("group", className)}
+      onClick={handleClick}
+      disabled={loading}
+    >
+      {loading ? <Loader2 className="size-4 animate-spin" /> : label}
+      {!loading && (
+        <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" data-icon="inline-end" />
+      )}
+    </Button>
+  );
+}

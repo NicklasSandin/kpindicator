@@ -1,0 +1,301 @@
+// WhatHits data model
+// Covers the client portal: projects (packages purchased), the ideas inside
+// each project, the campaigns run to test each idea, the raw metric
+// snapshots those campaigns produce, the resulting reports, and orders
+// (Stripe payments) that fund it all. Also covers WhatHits' own outbound
+// marketing email tracking (EmailCampaign/EmailRecipient/EmailEvent) — see
+// the comment above those models.
+//
+// See /docs/database-schema.md for the narrative version of this schema
+// with an ER diagram and query examples.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+}
+
+enum PackageType {
+  IDEA_CHECK
+  MARKET_TEST
+  VALIDATION_SPRINT
+  PRESALE_SPRINT
+}
+
+enum ProjectStatus {
+  INTAKE
+  POSITIONING
+  BUILD
+  TESTING
+  REPORTING
+  COMPLETE
+  ON_HOLD
+}
+
+enum IdeaStatus {
+  QUEUED
+  TESTING
+  VALIDATED
+  INVALIDATED
+  INCONCLUSIVE
+}
+
+enum Channel {
+  PAID_SEARCH
+  PAID_SOCIAL
+  EMAIL
+  ORGANIC_SOCIAL
+  OUTREACH
+  PARTNERSHIP
+}
+
+enum CampaignStatus {
+  DRAFT
+  LIVE
+  PAUSED
+  COMPLETE
+}
+
+enum Recommendation {
+  GO
+  NO_GO
+  PIVOT
+  MORE_DATA_NEEDED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  REFUNDED
+  CANCELED
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  PAUSED
+}
+
+enum EmailRecipientStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  COMPLAINED
+  UNSUBSCRIBED
+  FAILED
+}
+
+enum EmailEventType {
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  COMPLAINED
+  UNSUBSCRIBED
+  FAILED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(CLIENT)
+  company   String?
+  createdAt DateTime @default(now())
+
+  projects Project[]
+  orders   Order[]
+}
+
+model Project {
+  id                 String        @id @default(cuid())
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String
+  name               String
+  package            PackageType
+  status             ProjectStatus @default(INTAKE)
+  summary            String?
+  startDate          DateTime?
+  targetCompleteDate DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  ideas   Idea[]
+  reports Report[]
+
+  @@index([userId])
+}
+
+model Idea {
+  id             String     @id @default(cuid())
+  project        Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId      String
+  name           String
+  oneLiner       String
+  hypothesis     String
+  targetCustomer String
+  priorityRank   Int
+  status         IdeaStatus @default(QUEUED)
+  landingPageUrl String?
+  createdAt      DateTime   @default(now())
+
+  campaigns Campaign[]
+  reports   Report[]
+
+  @@index([projectId])
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  idea        Idea           @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  ideaId      String
+  channel     Channel
+  name        String
+  status      CampaignStatus @default(DRAFT)
+  budgetCents Int?
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime       @default(now())
+
+  metrics MetricSnapshot[]
+
+  @@index([ideaId])
+}
+
+model MetricSnapshot {
+  id          String   @id @default(cuid())
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId  String
+  date        DateTime
+  visitors    Int      @default(0)
+  leads       Int      @default(0)
+  signups     Int      @default(0)
+  preorders   Int      @default(0)
+  spendCents  Int      @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@index([campaignId])
+}
+
+model Report {
+  id             String          @id @default(cuid())
+  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId      String
+  idea           Idea?           @relation(fields: [ideaId], references: [id], onDelete: SetNull)
+  ideaId         String?
+  title          String
+  recommendation Recommendation
+  summary        String
+  body           String
+  fileUrl        String?
+  publishedAt    DateTime?
+  createdAt      DateTime        @default(now())
+
+  @@index([projectId])
+}
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  company   String?
+  interest  String?
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id                     String      @id @default(cuid())
+  user                   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                 String
+  package                PackageType
+  amountCents            Int
+  currency               String      @default("usd")
+  stripeSessionId        String?     @unique
+  stripePaymentIntentId  String?
+  status                 OrderStatus @default(PENDING)
+  createdAt              DateTime    @default(now())
+
+  @@index([userId])
+}
+
+// --- Outbound marketing email tracking -------------------------------
+// This is WhatHits' own top-of-funnel marketing (emailing prospective
+// clients), not to be confused with Campaign/Channel.EMAIL above, which is
+// a client's idea being tested via email outreach as part of their project.
+// Sending is provider-agnostic on purpose — see /api/webhooks/email and
+// docs/email-campaigns.md. Wire up the actual send/webhook once an ESP is
+// chosen.
+
+model EmailCampaign {
+  id           String              @id @default(cuid())
+  name         String
+  subject      String
+  previewText  String?
+  fromName     String?
+  fromEmail    String?
+  audience     String?
+  status       EmailCampaignStatus @default(DRAFT)
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  recipients EmailRecipient[]
+}
+
+model EmailRecipient {
+  id              String                @id @default(cuid())
+  campaign        EmailCampaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId      String
+  email           String
+  name            String?
+  company         String?
+  status          EmailRecipientStatus  @default(PENDING)
+  externalId      String?
+  sentAt          DateTime?
+  deliveredAt     DateTime?
+  firstOpenedAt   DateTime?
+  lastOpenedAt    DateTime?
+  openCount       Int                   @default(0)
+  firstClickedAt  DateTime?
+  lastClickedAt   DateTime?
+  clickCount      Int                   @default(0)
+  bouncedAt       DateTime?
+  bounceReason    String?
+  unsubscribedAt  DateTime?
+  createdAt       DateTime              @default(now())
+
+  events EmailEvent[]
+
+  @@unique([campaignId, email])
+  @@index([campaignId])
+}
+
+model EmailEvent {
+  id          String          @id @default(cuid())
+  recipient   EmailRecipient  @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId String
+  type        EmailEventType
+  occurredAt  DateTime
+  url         String?
+  meta        String?
+  createdAt   DateTime        @default(now())
+
+  @@index([recipientId])
+}
