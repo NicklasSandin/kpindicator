@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { PACKAGES } from "@/content/packages";
+import { notifyAdmin } from "@/lib/notify";
 
 /**
  * Records a paid Order when Stripe confirms a Checkout Session.
@@ -47,6 +48,10 @@ export async function POST(req: NextRequest) {
         create: { email, name: email.split("@")[0] },
       });
 
+      const existingOrder = await prisma.order.findUnique({
+        where: { stripeSessionId: session.id },
+      });
+
       await prisma.order.upsert({
         where: { stripeSessionId: session.id },
         update: { status: "PAID" },
@@ -61,6 +66,14 @@ export async function POST(req: NextRequest) {
           status: "PAID",
         },
       });
+
+      if (!existingOrder) {
+        const amount = ((session.amount_total ?? pkg.priceCents) / 100).toFixed(2);
+        await notifyAdmin(
+          `New paid signup: ${pkg.name}`,
+          `${email} just paid $${amount} ${(session.currency ?? "usd").toUpperCase()} for ${pkg.name}.`,
+        );
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
+import { notifyAdmin } from "@/lib/notify";
 
 const bodySchema = z.object({
   name: z.string().min(1).max(200),
@@ -29,9 +30,9 @@ export async function POST(req: NextRequest) {
 
   const submission = await prisma.contactSubmission.create({ data });
 
-  const notifyTo = process.env.CONTACT_NOTIFICATION_EMAIL;
-  console.log(
-    `[contact] New inquiry from ${data.name} <${data.email}>${notifyTo ? ` — notify ${notifyTo}` : ""}: ${submission.id}`,
+  await notifyAdmin(
+    `New contact inquiry from ${data.name}`,
+    `${data.name} <${data.email}>${data.company ? ` (${data.company})` : ""}${data.interest ? ` — ${data.interest}` : ""}\n\n${data.message}`,
   );
 
   return NextResponse.json({ ok: true });

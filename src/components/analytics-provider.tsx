@@ -31,6 +31,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     if (!key || posthog.__loaded) return;
     posthog.init(key, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
+      defaults: "2026-05-30",
       // We call capture("$pageview") manually on route change instead — the
       // App Router doesn't fire the full-page loads autocapture relies on.
       capture_pageview: false,
