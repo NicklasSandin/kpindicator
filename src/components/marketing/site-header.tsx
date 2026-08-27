@@ -19,8 +19,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/process", label: "Process" },
-  { href: "/pricing", label: "Pricing" },
+  { href: "/validate", label: "Validate" },
+  { href: "/grow", label: "Grow" },
+  { href: "/incorporate", label: "Incorporate" },
   { href: "/case-studies", label: "Case Studies" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
@@ -59,7 +60,7 @@ export function SiteHeader() {
           </Button>
           <Button asChild size="sm" className="h-9 px-4">
             <Link href="/contact">
-              Book a validation call
+              Book a call
               <ArrowRight className="size-3.5" data-icon="inline-end" />
             </Link>
           </Button>

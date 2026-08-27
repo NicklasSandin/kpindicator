@@ -6,9 +6,19 @@ import { Button } from "@/components/ui/button";
 export function CTASection({
   title = "Stop guessing which idea is worth building.",
   description = "Start with a $995 Idea Check, or go straight to testing 3-5 ideas in market with a Validation Sprint.",
+  primaryHref = "/pricing#idea-check",
+  primaryLabel = "Start with an Idea Check",
+  secondaryHref = "/contact",
+  secondaryLabel = "Book a validation call",
+  footnote = "Flat pricing. No retainer. You keep everything either way.",
 }: {
   title?: string;
   description?: string;
+  primaryHref?: string;
+  primaryLabel?: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
+  footnote?: string;
 }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card px-6 py-14 text-center sm:px-12 sm:py-20">
@@ -24,18 +34,16 @@ export function CTASection({
         <p className="mx-auto mt-4 max-w-lg text-balance text-muted-foreground">{description}</p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button asChild size="lg" className="h-11 px-6 text-[15px]">
-            <Link href="/pricing#idea-check">
-              Start with an Idea Check
+            <Link href={primaryHref}>
+              {primaryLabel}
               <ArrowRight className="size-4" data-icon="inline-end" />
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg" className="h-11 px-6 text-[15px]">
-            <Link href="/contact">Book a validation call</Link>
+            <Link href={secondaryHref}>{secondaryLabel}</Link>
           </Button>
         </div>
-        <p className="mt-5 text-xs text-muted-foreground">
-          Flat pricing. No retainer. You keep everything either way.
-        </p>
+        <p className="mt-5 text-xs text-muted-foreground">{footnote}</p>
       </div>
     </div>
   );

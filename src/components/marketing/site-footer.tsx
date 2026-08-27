@@ -3,20 +3,21 @@ import { Logo } from "@/components/logo";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   {
-    title: "Product",
+    title: "Services",
     links: [
-      { href: "/process", label: "Process" },
+      { href: "/validate", label: "Validate an idea" },
+      { href: "/grow", label: "Grow a product" },
+      { href: "/incorporate", label: "Company formation" },
       { href: "/pricing", label: "Pricing" },
-      { href: "/case-studies", label: "Case studies" },
-      { href: "/blog", label: "Blog" },
     ],
   },
   {
     title: "Company",
     links: [
       { href: "/about", label: "About" },
+      { href: "/case-studies", label: "Case studies" },
+      { href: "/blog", label: "Blog" },
       { href: "/contact", label: "Contact" },
-      { href: "/dashboard", label: "Client login" },
     ],
   },
   {
@@ -24,6 +25,7 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
     links: [
       { href: "/privacy", label: "Privacy" },
       { href: "/terms", label: "Terms" },
+      { href: "/dashboard", label: "Client login" },
     ],
   },
 ];
@@ -36,7 +38,7 @@ export function SiteFooter() {
           <div className="col-span-2 sm:col-span-1">
             <Logo />
             <p className="mt-3 max-w-52 text-sm text-muted-foreground">
-              We test what you&apos;re about to build, before you build it.
+              Know before you spend — on the idea, the growth, or the paperwork.
             </p>
           </div>
           {COLUMNS.map((col) => (
