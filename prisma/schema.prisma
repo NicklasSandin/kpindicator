@@ -23,6 +23,15 @@ enum Role {
   ADMIN
 }
 
+// How a self-registered user describes their relationship to KPIndicator.
+// Orthogonal to Role (which is about permissions, not intent) — set once,
+// right after signup, via the onboarding picker. Null until then.
+enum Audience {
+  STARTUP
+  INVESTOR
+  EXPLORER
+}
+
 enum PackageType {
   IDEA_CHECK
   MARKET_TEST
@@ -110,15 +119,34 @@ enum EmailEventType {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  role      Role     @default(CLIENT)
-  company   String?
-  createdAt DateTime @default(now())
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  // Nullable: seeded demo users predate password auth and have no login of
+  // their own. Real signups always set this at creation time.
+  passwordHash String?
+  role         Role      @default(CLIENT)
+  // Set right after signup via the onboarding picker; null until then.
+  audience     Audience?
+  company      String?
+  createdAt    DateTime  @default(now())
 
   projects Project[]
   orders   Order[]
+  sessions Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  // sha256 of the bearer token that goes in the session cookie — the raw
+  // token is never persisted, so a DB leak alone can't be replayed.
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Project {

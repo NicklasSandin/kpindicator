@@ -1,20 +1,15 @@
-import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+
+import { getSessionUser } from "@/lib/auth";
 
 /**
- * Placeholder for real auth (e.g. NextAuth, Clerk). The dashboard is a
- * client-portal preview — it reads real rows from the database, but there's
- * no session/login flow wired up yet. Swap this for a session lookup when
- * auth is added; every dashboard page already reads through this one
- * function, so that's the only place that needs to change.
+ * Every dashboard page reads through this one function, so it's the only
+ * place session handling lives. Redirects to /login when signed out, and to
+ * /onboarding when signed in but the user hasn't picked a persona yet.
  */
-const DEMO_USER_EMAIL = "jordan@northbeamstudio.co";
-
 export async function getCurrentUser() {
-  const user = await prisma.user.findUnique({ where: { email: DEMO_USER_EMAIL } });
-  if (!user) {
-    throw new Error(
-      `Demo user not found. Run "npm run db:seed" to populate the database.`,
-    );
-  }
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
+  if (!user.audience && user.role !== "ADMIN") redirect("/onboarding");
   return user;
 }

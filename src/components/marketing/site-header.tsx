@@ -56,7 +56,10 @@ export function SiteHeader() {
         <div className="hidden items-center gap-2 md:flex">
           <ThemeToggle />
           <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
-            <Link href="/dashboard">Client login</Link>
+            <Link href="/login">Log in</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/signup">Sign up</Link>
           </Button>
           <Button asChild size="sm" className="h-9 px-4">
             <Link href="/contact">
@@ -93,10 +96,18 @@ export function SiteHeader() {
                 ))}
                 <SheetClose asChild>
                   <Link
-                    href="/dashboard"
+                    href="/login"
                     className="rounded-md px-3 py-3 text-base font-medium text-muted-foreground hover:bg-muted"
                   >
-                    Client login
+                    Log in
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    href="/signup"
+                    className="rounded-md px-3 py-3 text-base font-medium text-muted-foreground hover:bg-muted"
+                  >
+                    Sign up
                   </Link>
                 </SheetClose>
               </nav>
