@@ -5,16 +5,17 @@
       "args": ["-y", "@playwright/mcp@latest"]
     },
     "postgres": {
-      "command": "npx",
+      "command": "uvx",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-postgres",
+        "--with", "mcp<2",
+        "postgres-mcp",
+        "--access-mode=restricted",
         "postgresql://<readonly-user>:<password>@127.0.0.1:5432/kpindicator_prod"
       ]
     },
     "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "command": "/usr/local/bin/github-mcp-server",
+      "args": ["stdio"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "<github-pat-with-repo-scope>"
       }
