@@ -10,6 +10,7 @@ const bodySchema = z.object({ name: z.string().trim().min(2).max(100) });
 export async function POST(req: NextRequest) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Please log in first." }, { status: 401 });
+  if (!user.emailVerifiedAt) return NextResponse.json({ error: "Verify your email first." }, { status: 403 });
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Enter a team name between 2 and 100 characters." }, { status: 400 });
 

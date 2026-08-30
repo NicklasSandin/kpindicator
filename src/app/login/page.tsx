@@ -6,7 +6,7 @@ import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = { title: "Log in" };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ invite?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ invite?: string; verify?: string }> }) {
   const params = await searchParams;
   return (
     <div className="flex min-h-full flex-1 items-center justify-center px-4 py-16">
@@ -18,7 +18,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <h1 className="text-xl font-semibold text-foreground">Welcome back</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">Log in to see what&apos;s in progress.</p>
           <div className="mt-6">
-            <LoginForm invitationToken={params.invite} />
+            <LoginForm invitationToken={params.invite} verificationToken={params.verify} />
           </div>
         </div>
         <p className="mt-6 text-center text-sm text-muted-foreground">

@@ -11,6 +11,7 @@ import { getSessionUser } from "@/lib/auth";
 export async function getCurrentAdmin() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  if (!user.emailVerifiedAt) redirect("/verify-email");
   if (user.role !== "ADMIN") redirect("/dashboard");
   return user;
 }

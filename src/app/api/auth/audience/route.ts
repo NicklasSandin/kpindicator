@@ -13,6 +13,9 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "Please log in first." }, { status: 401 });
   }
+  if (!user.emailVerifiedAt) {
+    return NextResponse.json({ error: "Verify your email first." }, { status: 403 });
+  }
 
   const json = await req.json().catch(() => null);
   const parsed = bodySchema.safeParse(json);

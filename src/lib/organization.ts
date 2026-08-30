@@ -10,6 +10,7 @@ export const ORGANIZATION_COOKIE = "kp_organization";
 export async function getCurrentOrganization() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  if (!user.emailVerifiedAt) redirect("/verify-email");
 
   const cookieStore = await cookies();
   const requestedId = cookieStore.get(ORGANIZATION_COOKIE)?.value;

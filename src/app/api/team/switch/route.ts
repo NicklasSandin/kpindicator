@@ -10,6 +10,7 @@ const bodySchema = z.object({ organizationId: z.string().min(1) });
 export async function POST(req: NextRequest) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Please log in first." }, { status: 401 });
+  if (!user.emailVerifiedAt) return NextResponse.json({ error: "Verify your email first." }, { status: 403 });
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid team." }, { status: 400 });
 

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function LoginForm({ invitationToken }: { invitationToken?: string }) {
+export function LoginForm({ invitationToken, verificationToken }: { invitationToken?: string; verificationToken?: string }) {
   const router = useRouter();
   const [submitting, setSubmitting] = React.useState(false);
 
@@ -37,7 +37,13 @@ export function LoginForm({ invitationToken }: { invitationToken?: string }) {
         return;
       }
 
-      router.push(invitationToken ? `/invite/${encodeURIComponent(invitationToken)}` : (data.redirect ?? "/dashboard"));
+      router.push(
+        invitationToken
+          ? `/invite/${encodeURIComponent(invitationToken)}`
+          : verificationToken
+            ? `/verify-email/${encodeURIComponent(verificationToken)}`
+            : (data.redirect ?? "/dashboard"),
+      );
       router.refresh();
     } catch {
       toast.error("Couldn't reach the server. Check your connection and try again.");

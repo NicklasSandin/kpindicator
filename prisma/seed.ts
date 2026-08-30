@@ -55,6 +55,7 @@ async function main() {
       name: "KPIndicator Ops",
       role: "ADMIN",
       company: "KPIndicator",
+      emailVerifiedAt: new Date("2026-08-26T00:00:00Z"),
     },
   });
 
@@ -64,6 +65,7 @@ async function main() {
       name: "Jordan Reyes",
       role: "CLIENT",
       company: "Northbeam Studio",
+      emailVerifiedAt: new Date("2026-08-26T00:00:00Z"),
     },
   });
 

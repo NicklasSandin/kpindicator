@@ -10,6 +10,7 @@ import { getSessionUser } from "@/lib/auth";
 export async function getCurrentUser() {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  if (!user.emailVerifiedAt) redirect("/verify-email");
   if (!user.audience && user.role !== "ADMIN") redirect("/onboarding");
   return user;
 }

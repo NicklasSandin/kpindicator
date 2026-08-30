@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, password } = parsed.data;
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
 
   if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ error: GENERIC_ERROR }, { status: 401 });
@@ -28,6 +28,12 @@ export async function POST(req: NextRequest) {
 
   await createSession(user.id);
 
-  const redirectTo = user.role === "ADMIN" ? "/admin" : !user.audience ? "/onboarding" : "/dashboard";
+  const redirectTo = !user.emailVerifiedAt
+    ? "/verify-email"
+    : user.role === "ADMIN"
+      ? "/admin"
+      : !user.audience
+        ? "/onboarding"
+        : "/dashboard";
   return NextResponse.json({ ok: true, redirect: redirectTo });
 }

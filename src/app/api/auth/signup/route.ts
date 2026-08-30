@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, createSession } from "@/lib/auth";
 import { notifyAdmin } from "@/lib/notify";
+import { sendVerificationEmail } from "@/lib/email-verification";
 
 const bodySchema = z.object({
   name: z.string().min(1).max(200),
@@ -98,7 +99,8 @@ export async function POST(req: NextRequest) {
   });
 
   await createSession(user.id);
+  await sendVerificationEmail(user);
   await notifyAdmin("New KPIndicator signup", `${name} <${normalizedEmail}> just created an account.`);
 
-  return NextResponse.json({ ok: true, redirect: "/onboarding" });
+  return NextResponse.json({ ok: true, redirect: "/verify-email" });
 }
