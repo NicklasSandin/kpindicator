@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, Lightbulb, TrendingUp, Building2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const SEGMENTS = [
   {
     href: "/validate",
-    icon: Lightbulb,
+    index: "01",
     title: "I have an idea",
     description:
       "Test demand before you spend a dollar building. Real landing pages, real traffic, a clear go / no-go.",
@@ -14,7 +13,7 @@ const SEGMENTS = [
   },
   {
     href: "/grow",
-    icon: TrendingUp,
+    index: "02",
     title: "I have a live product",
     description:
       "Test new positioning, features, channels, or pricing against real traffic before you bet a quarter on the wrong one.",
@@ -22,7 +21,7 @@ const SEGMENTS = [
   },
   {
     href: "/incorporate",
-    icon: Building2,
+    index: "03",
     title: "I need a company",
     description:
       "Entity formation, banking, and compliance handled so a validated idea doesn't stall on paperwork.",
@@ -30,28 +29,49 @@ const SEGMENTS = [
   },
 ] as const;
 
+/**
+ * A report's table of contents, not a row of feature cards.
+ *
+ * No icon chips, no rounded card, no hover-lift-and-shadow — those three
+ * together are the most reliable tell of a generated marketing page. The
+ * hierarchy here comes from a ruled grid and a display numeral instead.
+ */
 export function SegmentPicker() {
   return (
-    <div className="grid gap-5 sm:grid-cols-3">
-      {SEGMENTS.map((segment, i) => (
+    <div className="grid rule-t sm:grid-cols-3">
+      {SEGMENTS.map((segment) => (
         <Link
           key={segment.href}
           href={segment.href}
           className={cn(
-            "group flex flex-col rounded-xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 sm:p-7",
-            i === 0 && "border-primary/50 ring-1 ring-primary/20",
+            "group relative flex flex-col border-b border-rule px-1 py-7",
+            "sm:border-b-0 sm:border-l sm:px-6 sm:py-8",
+            "sm:first:border-l-0 sm:first:pl-1",
+            "transition-colors duration-300 hover:bg-card",
           )}
         >
-          <span className="flex size-10 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-            <segment.icon className="size-5" />
+          {/* Signal rule draws across the top on hover. */}
+          <span
+            aria-hidden
+            className="absolute inset-x-0 -top-px h-px origin-left scale-x-0 bg-signal transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-x-100"
+          />
+
+          <span className="font-display text-3xl leading-none text-signal-ink tnum">
+            {segment.index}
           </span>
-          <h3 className="mt-5 text-lg font-semibold text-foreground">{segment.title}</h3>
-          <p className="mt-2 text-sm text-muted-foreground">{segment.description}</p>
-          <div className="mt-6 flex items-center justify-between pt-2">
-            <span className="text-xs font-medium text-muted-foreground">{segment.price}</span>
-            <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+
+          <h3 className="mt-5 font-display text-2xl leading-tight text-foreground">
+            {segment.title}
+          </h3>
+
+          <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+            {segment.description}
+          </p>
+
+          <div className="mt-7 flex items-baseline justify-between gap-4">
+            <span className="eyebrow text-muted-foreground">{segment.price}</span>
+            <span className="link-underline text-sm font-medium text-foreground group-hover:bg-[length:100%_1px]">
               Start here
-              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
             </span>
           </div>
         </Link>

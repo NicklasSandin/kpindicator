@@ -5,6 +5,8 @@ import { ArrowLeft } from "lucide-react";
 
 import { Section } from "@/components/marketing/section";
 import { MDXContent } from "@/components/mdx-content";
+import { JsonLd } from "@/components/json-ld";
+import { blogPostingSchema, breadcrumbSchema } from "@/lib/seo";
 import { getBlogPosts, getBlogPost } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 
@@ -34,6 +36,16 @@ export default async function BlogPostPage({
 
   return (
     <Section border={false} className="pb-24">
+      <JsonLd
+        schema={[
+          blogPostingSchema(post),
+          breadcrumbSchema([
+            { name: "Home", path: "/" },
+            { name: "Blog", path: "/blog" },
+            { name: post.title, path: `/blog/${post.slug}` },
+          ]),
+        ]}
+      />
       <div className="mx-auto max-w-2xl">
         <Link
           href="/blog"

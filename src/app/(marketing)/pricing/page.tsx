@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Timer } from "lucide-react";
 
+import { JsonLd } from "@/components/json-ld";
+import { serviceSchemas } from "@/lib/seo";
 import { Section, SectionHeading } from "@/components/marketing/section";
 import { PricingCards } from "@/components/marketing/pricing-cards";
 import { PricingComparisonTable } from "@/components/marketing/pricing-comparison-table";
@@ -20,6 +22,7 @@ export default function PricingPage() {
 
   return (
     <>
+      <JsonLd schema={serviceSchemas()} />
       <Section border={false} className="pb-8">
         <div className="mx-auto mb-5 max-w-2xl text-center">
           <Badge variant="secondary" className="gap-1.5 px-3 py-1 text-xs font-medium">

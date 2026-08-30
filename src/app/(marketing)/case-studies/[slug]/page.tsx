@@ -7,6 +7,8 @@ import { Section } from "@/components/marketing/section";
 import { CTASection } from "@/components/marketing/cta-section";
 import { MDXContent } from "@/components/mdx-content";
 import { Badge } from "@/components/ui/badge";
+import { JsonLd } from "@/components/json-ld";
+import { breadcrumbSchema, caseStudySchema } from "@/lib/seo";
 import { getCaseStudies, getCaseStudy } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 
@@ -36,6 +38,16 @@ export default async function CaseStudyPage({
 
   return (
     <>
+      <JsonLd
+        schema={[
+          caseStudySchema(caseStudy),
+          breadcrumbSchema([
+            { name: "Home", path: "/" },
+            { name: "Case studies", path: "/case-studies" },
+            { name: caseStudy.title, path: `/case-studies/${caseStudy.slug}` },
+          ]),
+        ]}
+      />
       <Section border={false} className="pb-8">
         <div className="mx-auto max-w-2xl">
           <Link
