@@ -6,15 +6,14 @@ export function Logo({ className }: { className?: string }) {
     <Link
       href="/"
       className={cn(
-        "group inline-flex items-center gap-2 text-[15px] font-semibold tracking-tight text-foreground",
+        "group inline-flex items-baseline gap-2 font-display text-[19px] tracking-tight text-foreground",
         className,
       )}
     >
-      <span className="relative flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-        <span className="absolute inset-0 rounded-md ring-1 ring-inset ring-black/10" />
-        <span className="size-1.5 rounded-full bg-current" />
+      <span className="relative flex size-2 shrink-0 self-center rounded-full bg-signal" />
+      <span>
+        KP<span className="text-signal-ink">Indicator</span>
       </span>
-      KP<span className="text-primary">Indicator</span>
     </Link>
   );
 }
