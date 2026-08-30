@@ -51,3 +51,29 @@ export async function notifyAdmin(subject: string, text: string) {
     console.error(`[notify] Failed to send "${subject}":`, err);
   }
 }
+
+export async function sendEmail(to: string, subject: string, text: string) {
+  if (!sesClient) {
+    console.log(`[email] ${subject} (would email ${to} — configure SES credentials to send it)`);
+    return false;
+  }
+
+  try {
+    await sesClient.send(
+      new SendEmailCommand({
+        FromEmailAddress: FROM_EMAIL,
+        Destination: { ToAddresses: [to] },
+        Content: {
+          Simple: {
+            Subject: { Data: subject },
+            Body: { Text: { Data: text } },
+          },
+        },
+      }),
+    );
+    return true;
+  } catch (err) {
+    console.error(`[email] Failed to send "${subject}" to ${to}:`, err);
+    return false;
+  }
+}

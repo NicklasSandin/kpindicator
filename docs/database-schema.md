@@ -11,8 +11,10 @@ already Postgres-compatible (no SQLite-only types are used).
 
 ```mermaid
 erDiagram
-    User ||--o{ Project : owns
-    User ||--o{ Order : pays
+    User ||--o{ OrganizationMember : joins
+    Organization ||--o{ OrganizationMember : contains
+    Organization ||--o{ Project : owns
+    Organization ||--o{ Order : pays
     Project ||--o{ Idea : contains
     Project ||--o{ Report : "portfolio reports"
     Idea ||--o{ Campaign : "tested via"
@@ -28,7 +30,7 @@ erDiagram
     }
     Project {
         string id PK
-        string userId FK
+        string organizationId FK
         string name
         PackageType package
         ProjectStatus status
@@ -72,7 +74,7 @@ erDiagram
     }
     Order {
         string id PK
-        string userId FK
+        string organizationId FK
         PackageType package
         int amountCents
         OrderStatus status
@@ -105,7 +107,7 @@ them (`ideaId` null). The optional FK is what makes both cases the same table in
 
 **`Order` is deliberately decoupled from `Project`.** A Stripe payment creates an `Order`; a
 `Project` gets created (by us, during intake) once we've actually scoped the engagement. They're
-linked by `userId` and time proximity, not a hard foreign key — because in practice there's a
+linked by `organizationId` and time proximity, not a hard foreign key — because in practice there's a
 conversation between "paid" and "project scoped and kicked off," and forcing a 1:1 FK would
 make that gap invisible instead of modelable.
 
@@ -134,6 +136,7 @@ Adding real auth: add a `Session`/`Account` model (or point `getCurrentUser()` a
 provider's session) — nothing else in the dashboard needs to change, since every page already
 reads through that one function.
 
-Adding team accounts: introduce an `Organization` model between `User` and `Project`
-(`Project.organizationId` instead of `userId`), with a join table for membership. `Order` would
-move to the same FK.
+Team accounts use `OrganizationMember` as the authorization boundary. Projects and orders belong
+to an organization, and users can switch between every organization in which they have a
+membership. Invitations are stored as expiring, hashed bearer tokens; owner and admin roles can
+invite people and manage non-owner memberships.

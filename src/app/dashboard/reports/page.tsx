@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentOrganization } from "@/lib/organization";
 import { formatDate } from "@/lib/format";
 import { StatusBadge } from "@/components/status-badge";
 
 export const metadata: Metadata = { title: "Reports" };
 
 export default async function ReportsPage() {
-  const user = await getCurrentUser();
+  const { organization } = await getCurrentOrganization();
 
   const reports = await prisma.report.findMany({
-    where: { project: { userId: user.id } },
+    where: { project: { organizationId: organization.id } },
     include: { project: true, idea: true },
     orderBy: { createdAt: "desc" },
   });

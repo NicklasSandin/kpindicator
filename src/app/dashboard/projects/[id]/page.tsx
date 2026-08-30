@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, FileText } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentOrganization } from "@/lib/organization";
 import { sumMetrics } from "@/lib/metrics";
 import { formatCents, formatDate, formatNumber, formatPercent } from "@/lib/format";
 import { PACKAGES } from "@/content/packages";
@@ -12,14 +12,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
-  const project = await prisma.project.findUnique({ where: { id } });
-  return { title: project?.name ?? "Project" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: "Project" };
 }
 
 export default async function ProjectDetailPage({
@@ -28,10 +22,10 @@ export default async function ProjectDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await getCurrentUser();
+  const { organization } = await getCurrentOrganization();
 
   const project = await prisma.project.findFirst({
-    where: { id, userId: user.id },
+    where: { id, organizationId: organization.id },
     include: {
       ideas: {
         orderBy: { priorityRank: "asc" },

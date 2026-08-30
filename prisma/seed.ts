@@ -41,6 +41,9 @@ async function main() {
   await prisma.campaign.deleteMany();
   await prisma.idea.deleteMany();
   await prisma.project.deleteMany();
+  await prisma.organizationInvitation.deleteMany();
+  await prisma.organizationMember.deleteMany();
+  await prisma.organization.deleteMany();
   await prisma.user.deleteMany();
   await prisma.emailEvent.deleteMany();
   await prisma.emailRecipient.deleteMany();
@@ -64,12 +67,19 @@ async function main() {
     },
   });
 
+  const clientOrganization = await prisma.organization.create({
+    data: {
+      name: "Northbeam Studio",
+      members: { create: { userId: client.id, role: "OWNER" } },
+    },
+  });
+
   // ---------------------------------------------------------------------
   // Project A — a completed Validation Sprint across 4 ideas
   // ---------------------------------------------------------------------
   const projectA = await prisma.project.create({
     data: {
-      userId: client.id,
+      organizationId: clientOrganization.id,
       name: "Q2 Idea Batch — Validation Sprint",
       package: PackageType.VALIDATION_SPRINT,
       status: "COMPLETE",
@@ -223,7 +233,7 @@ async function main() {
   // ---------------------------------------------------------------------
   const projectB = await prisma.project.create({
     data: {
-      userId: client.id,
+      organizationId: clientOrganization.id,
       name: "Ledger — Presale Sprint",
       package: PackageType.PRESALE_SPRINT,
       status: "TESTING",
@@ -303,7 +313,7 @@ async function main() {
   // ---------------------------------------------------------------------
   await prisma.order.create({
     data: {
-      userId: client.id,
+      organizationId: clientOrganization.id,
       package: PackageType.VALIDATION_SPRINT,
       amountCents: 490000,
       status: "PAID",
@@ -313,7 +323,7 @@ async function main() {
   });
   await prisma.order.create({
     data: {
-      userId: client.id,
+      organizationId: clientOrganization.id,
       package: PackageType.PRESALE_SPRINT,
       amountCents: 850000,
       status: "PAID",

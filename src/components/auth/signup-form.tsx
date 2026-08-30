@@ -9,7 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function SignupForm() {
+export function SignupForm({
+  invitationToken,
+  invitedEmail,
+}: {
+  invitationToken?: string;
+  invitedEmail?: string;
+}) {
   const router = useRouter();
   const [submitting, setSubmitting] = React.useState(false);
 
@@ -23,6 +29,7 @@ export function SignupForm() {
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
       password: String(formData.get("password") ?? ""),
+      invitationToken,
     };
 
     try {
@@ -60,6 +67,8 @@ export function SignupForm() {
           name="email"
           type="email"
           required
+          defaultValue={invitedEmail}
+          readOnly={Boolean(invitedEmail)}
           placeholder="you@company.com"
           autoComplete="email"
         />

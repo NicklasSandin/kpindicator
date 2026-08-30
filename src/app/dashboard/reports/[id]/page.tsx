@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentOrganization } from "@/lib/organization";
 import { sumMetrics } from "@/lib/metrics";
 import { formatDate, formatNumber, formatPercent } from "@/lib/format";
 import { PACKAGES } from "@/content/packages";
@@ -13,14 +13,8 @@ import { RecommendationBanner } from "@/components/dashboard/recommendation-bann
 import { ReportPrintButton } from "@/components/dashboard/report-print-button";
 import { Badge } from "@/components/ui/badge";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
-  const report = await prisma.report.findUnique({ where: { id } });
-  return { title: report?.title ?? "Report" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: "Report" };
 }
 
 export default async function ReportDetailPage({
@@ -29,10 +23,10 @@ export default async function ReportDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await getCurrentUser();
+  const { organization } = await getCurrentOrganization();
 
   const report = await prisma.report.findFirst({
-    where: { id, project: { userId: user.id } },
+    where: { id, project: { organizationId: organization.id } },
     include: {
       project: true,
       idea: { include: { campaigns: { include: { metrics: true } } } },

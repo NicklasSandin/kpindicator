@@ -48,6 +48,21 @@ export async function POST(req: NextRequest) {
         create: { email, name: email.split("@")[0] },
       });
 
+      let membership = await prisma.organizationMember.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "asc" },
+      });
+      if (!membership) {
+        const organization = await prisma.organization.create({
+          data: {
+            name: `${user.name}'s team`,
+            members: { create: { userId: user.id, role: "OWNER" } },
+          },
+          include: { members: true },
+        });
+        membership = organization.members[0];
+      }
+
       const existingOrder = await prisma.order.findUnique({
         where: { stripeSessionId: session.id },
       });
@@ -56,7 +71,7 @@ export async function POST(req: NextRequest) {
         where: { stripeSessionId: session.id },
         update: { status: "PAID" },
         create: {
-          userId: user.id,
+          organizationId: membership.organizationId,
           package: pkg.dbType,
           amountCents: session.amount_total ?? pkg.priceCents,
           currency: session.currency ?? "usd",
