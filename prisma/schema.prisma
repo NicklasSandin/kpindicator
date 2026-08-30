@@ -152,6 +152,7 @@ model Organization {
   invitations OrganizationInvitation[]
   projects    Project[]
   orders      Order[]
+  auditLogs   OrganizationAuditLog[]
 }
 
 model OrganizationMember {
@@ -162,9 +163,24 @@ model OrganizationMember {
   userId         String
   role           OrganizationRole @default(MEMBER)
   createdAt      DateTime         @default(now())
+  projectAccess  ProjectAccess[]
 
   @@unique([organizationId, userId])
   @@index([userId])
+}
+
+model OrganizationAuditLog {
+  id             String       @id @default(cuid())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  actorId        String?
+  actorName      String
+  action         String
+  target         String?
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
 }
 
 model OrganizationInvitation {
@@ -208,11 +224,25 @@ model Project {
   targetCompleteDate DateTime?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
+  restricted         Boolean       @default(false)
 
-  ideas   Idea[]
-  reports Report[]
+  ideas        Idea[]
+  reports      Report[]
+  memberAccess ProjectAccess[]
 
   @@index([organizationId])
+}
+
+model ProjectAccess {
+  id        String             @id @default(cuid())
+  project   Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  member    OrganizationMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId  String
+  createdAt DateTime           @default(now())
+
+  @@unique([projectId, memberId])
+  @@index([memberId])
 }
 
 model Idea {

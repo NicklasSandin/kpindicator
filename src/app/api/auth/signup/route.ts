@@ -72,11 +72,24 @@ export async function POST(req: NextRequest) {
         where: { id: invitation.id },
         data: { acceptedAt: new Date() },
       });
+      await tx.organizationAuditLog.create({
+        data: {
+          organizationId: invitation.organizationId,
+          actorId: created.id,
+          actorName: created.name,
+          action: "INVITATION_ACCEPTED",
+          target: created.email,
+          metadata: { role: invitation.role },
+        },
+      });
     } else {
       await tx.organization.create({
         data: {
           name: `${name.trim()}'s team`,
           members: { create: { userId: created.id, role: "OWNER" } },
+          auditLogs: {
+            create: { actorId: created.id, actorName: created.name, action: "TEAM_CREATED", target: `${name.trim()}'s team` },
+          },
         },
       });
     }

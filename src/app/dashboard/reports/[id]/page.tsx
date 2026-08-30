@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentOrganization } from "@/lib/organization";
+import { getCurrentOrganization, visibleProjectWhere } from "@/lib/organization";
 import { sumMetrics } from "@/lib/metrics";
 import { formatDate, formatNumber, formatPercent } from "@/lib/format";
 import { PACKAGES } from "@/content/packages";
@@ -23,10 +23,10 @@ export default async function ReportDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { organization } = await getCurrentOrganization();
+  const context = await getCurrentOrganization();
 
   const report = await prisma.report.findFirst({
-    where: { id, project: { organizationId: organization.id } },
+    where: { id, project: visibleProjectWhere(context) },
     include: {
       project: true,
       idea: { include: { campaigns: { include: { metrics: true } } } },

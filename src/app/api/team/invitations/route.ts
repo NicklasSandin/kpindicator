@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentOrganization, canManageTeam } from "@/lib/organization";
+import { getCurrentOrganization, canManageTeam, logTeamAction } from "@/lib/organization";
 import { sendEmail } from "@/lib/notify";
 
 const bodySchema = z.object({
@@ -58,6 +58,15 @@ export async function POST(req: NextRequest) {
     `Join ${organization.name} on KPIndicator`,
     `${user.name} invited you to join ${organization.name} on KPIndicator.\n\nAccept the invitation: ${inviteUrl}\n\nThis link expires in 7 days.`,
   );
+
+  await logTeamAction({
+    organizationId: organization.id,
+    actorId: user.id,
+    actorName: user.name,
+    action: "INVITATION_SENT",
+    target: email,
+    metadata: { role: parsed.data.role, delivered },
+  });
 
   return NextResponse.json({ ok: true, inviteUrl, delivered });
 }

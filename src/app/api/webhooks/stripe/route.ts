@@ -57,6 +57,9 @@ export async function POST(req: NextRequest) {
           data: {
             name: `${user.name}'s team`,
             members: { create: { userId: user.id, role: "OWNER" } },
+            auditLogs: {
+              create: { actorId: user.id, actorName: user.name, action: "TEAM_CREATED", target: `${user.name}'s team` },
+            },
           },
           include: { members: true },
         });

@@ -32,6 +32,10 @@ export async function POST(req: NextRequest) {
       create: { organizationId: invitation.organizationId, userId: user.id, role: invitation.role },
     }),
     prisma.organizationInvitation.update({ where: { id: invitation.id }, data: { acceptedAt: new Date() } }),
+    prisma.organizationAuditLog.create({ data: {
+      organizationId: invitation.organizationId, actorId: user.id, actorName: user.name,
+      action: "INVITATION_ACCEPTED", target: user.email, metadata: { role: invitation.role },
+    } }),
   ]);
 
   const response = NextResponse.json({ ok: true, redirect: "/dashboard" });

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentOrganization } from "@/lib/organization";
+import { getCurrentOrganization, visibleProjectWhere } from "@/lib/organization";
 import { formatDate } from "@/lib/format";
 import { PACKAGES } from "@/content/packages";
 import { StatusBadge } from "@/components/status-badge";
@@ -13,9 +13,10 @@ import { AudienceSwitcher } from "@/components/dashboard/audience-switcher";
 export const metadata: Metadata = { title: "Projects" };
 
 export default async function ProjectsPage() {
-  const { user, organization } = await getCurrentOrganization();
+  const context = await getCurrentOrganization();
+  const { user } = context;
   const projects = await prisma.project.findMany({
-    where: { organizationId: organization.id },
+    where: visibleProjectWhere(context),
     include: { ideas: true, reports: true },
     orderBy: { createdAt: "desc" },
   });
