@@ -1,6 +1,6 @@
 import { Check, KeyRound, Ban, FileCheck2 } from "lucide-react";
 
-import { PACKAGES, INTRO_PRICING_NOTE } from "@/content/packages";
+import { PACKAGES } from "@/content/packages";
 import { formatCents } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { CheckoutButton } from "@/components/marketing/checkout-button";
@@ -72,10 +72,6 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
           A no-go is a complete, written answer
         </div>
       </div>
-
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">Founding pricing:</span> {INTRO_PRICING_NOTE}
-      </p>
     </div>
   );
 }

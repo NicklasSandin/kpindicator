@@ -127,6 +127,3 @@ export function getPackage(id: PackageId) {
   if (!pkg) throw new Error(`Unknown package: ${id}`);
   return pkg;
 }
-
-export const INTRO_PRICING_NOTE =
-  "The first 5-10 clients get Market Test at $2,500 while we build out case studies from real results. After that cohort, it moves to $4,500-$6,000 per idea.";
