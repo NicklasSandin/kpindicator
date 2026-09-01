@@ -1,0 +1,13 @@
+# Apache front-controller rewrite. nginx equivalent is in checkout/README.md.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Serve real files (the stylesheet, the script) directly.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>

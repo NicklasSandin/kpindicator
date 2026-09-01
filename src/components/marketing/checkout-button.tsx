@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button";
 import type { PackageId } from "@/content/packages";
 import { cn } from "@/lib/utils";
 
+/**
+ * When the PHP checkout (see /checkout) is deployed, buyers go straight there
+ * and never touch /api/checkout. Unset, this falls back to the hosted Stripe
+ * Checkout Session route, so neither surface is a hard dependency of the other.
+ */
+const CUSTOM_CHECKOUT_URL = process.env.NEXT_PUBLIC_CHECKOUT_URL;
+
 export function CheckoutButton({
   packageId,
   label = "Get started",
@@ -23,6 +30,15 @@ export function CheckoutButton({
 
   async function handleClick() {
     setLoading(true);
+
+    // A full-page navigation, not a fetch: the PHP checkout renders the order
+    // and creates the PaymentIntent itself, so there is nothing to ask for
+    // first.
+    if (CUSTOM_CHECKOUT_URL) {
+      window.location.href = `${CUSTOM_CHECKOUT_URL.replace(/\/$/, "")}/?package=${encodeURIComponent(packageId)}`;
+      return;
+    }
+
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
