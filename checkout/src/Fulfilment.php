@@ -19,6 +19,7 @@ final class Fulfilment
     public function __construct(
         private readonly ?Orders $orders,
         private readonly Notifier $notifier,
+        private readonly ?Analytics $analytics = null,
     ) {
     }
 
@@ -84,6 +85,20 @@ final class Fulfilment
         $result['recorded'] = $recorded['created'];
 
         if ($recorded['created']) {
+            // Emitted here rather than from the routes so exactly one completion
+            // is reported per order. The return page and the webhook both call
+            // fulfil(), and recordPaid() is the idempotency boundary — whichever
+            // arrives second sees created=false and stays quiet.
+            $this->analytics?->capture('checkout_completed', (string) ($metadata['visitorId'] ?? $email), [
+                'package' => (string) $package['id'],
+                'package_name' => (string) $package['name'],
+                'amount' => $amount,
+                'currency' => $currency,
+                'payment_intent' => $intentId,
+                'order_id' => $recorded['orderId'],
+                'revenue' => round($amount / 100, 2),
+            ], ['email' => $email]);
+
             $this->notifier->adminAlert(
                 sprintf('New paid signup: %s', (string) $package['name']),
                 sprintf(

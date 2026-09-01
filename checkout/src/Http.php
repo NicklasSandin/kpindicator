@@ -215,6 +215,25 @@ final class Http
         return ['ok' => true, 'path' => $path . $fallback, 'detail' => 'verified by writing as ' . $user];
     }
 
+    /**
+     * A stable id for this visitor, for funnel analytics.
+     *
+     * Deliberately not the session id: this value is written into Stripe
+     * metadata so a completion arriving by webhook — where there is no session
+     * — still joins the same funnel. An opaque random token can travel there;
+     * a session identifier should not.
+     */
+    public static function visitorId(): string
+    {
+        self::startSession();
+
+        if (empty($_SESSION['visitor_id']) || !is_string($_SESSION['visitor_id'])) {
+            $_SESSION['visitor_id'] = 'v_' . bin2hex(random_bytes(12));
+        }
+
+        return $_SESSION['visitor_id'];
+    }
+
     public static function csrfToken(): string
     {
         self::startSession();

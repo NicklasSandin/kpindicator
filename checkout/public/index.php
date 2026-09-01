@@ -36,7 +36,10 @@ $pricing = $app['pricing'];
 /** @var string|null $baseUrlConfig */
 $baseUrlConfig = $app['base_url'];
 
-$fulfilment = new Fulfilment($app['orders'], $app['notifier']);
+/** @var Analytics $analytics */
+$analytics = $app['analytics'];
+
+$fulfilment = new Fulfilment($app['orders'], $app['notifier'], $analytics);
 
 try {
     switch (true) {
@@ -59,6 +62,13 @@ try {
             $price = $pricing->resolve($package);
             $prefillEmail = isset($_GET['email']) && is_string($_GET['email'])
                 && filter_var($_GET['email'], FILTER_VALIDATE_EMAIL) ? $_GET['email'] : '';
+
+            $analytics->capture('checkout_viewed', Http::visitorId(), [
+                'package' => (string) $package['id'],
+                'package_name' => (string) $package['name'],
+                'amount' => $price['amount'],
+                'currency' => $price['currency'],
+            ] + Analytics::requestContext());
 
             $view->render('checkout', [
                 'package' => $package,
@@ -127,6 +137,7 @@ try {
                     'packageType' => (string) $package['dbType'],
                     'packageName' => (string) $package['name'],
                     'priceId' => $price['priceId'],
+                    'visitorId' => Http::visitorId(),
                     'source' => 'php-checkout',
                 ],
             ], $idempotencyKey);
@@ -135,6 +146,14 @@ try {
                 'packageId' => (string) $package['id'],
                 'amount' => $price['amount'],
                 'currency' => $price['currency'],
+            ]);
+
+            $analytics->capture('checkout_payment_started', Http::visitorId(), [
+                'package' => (string) $package['id'],
+                'amount' => $price['amount'],
+                'currency' => $price['currency'],
+                'payment_intent' => $intent['id'] ?? null,
+                'price_source' => $price['source'],
             ]);
 
             Http::json([
@@ -183,6 +202,17 @@ try {
                     'company' => $company !== '' ? mb_substr($company, 0, 120) : null,
                 ],
             ]);
+
+            $analytics->capture(
+                'checkout_details_entered',
+                Http::visitorId(),
+                ['payment_intent' => $intentId, 'has_company' => $company !== ''],
+                array_filter([
+                    'email' => $email,
+                    'name' => $name !== '' ? $name : null,
+                    'company' => $company !== '' ? $company : null,
+                ]),
+            );
 
             Http::json(['ok' => true]);
             break;
@@ -246,6 +276,19 @@ try {
             $status = (string) ($intent['status'] ?? 'unknown');
             $outcome = $status === 'succeeded' ? $fulfilment->fulfil($intent) : null;
 
+            if ($status !== 'succeeded') {
+                // checkout_completed is emitted by Fulfilment, so that one
+                // event fires whether the return page or the webhook got there
+                // first. Only the unhappy paths are reported from here.
+                $analytics->capture('checkout_not_completed', Http::visitorId(), [
+                    'payment_intent' => $intentId,
+                    'status' => $status,
+                    'reason' => is_array($intent['last_payment_error'] ?? null)
+                        ? (string) ($intent['last_payment_error']['code'] ?? 'unknown')
+                        : null,
+                ]);
+            }
+
             $metadata = is_array($intent['metadata'] ?? null) ? $intent['metadata'] : [];
             $package = $outcome['package'] ?? Packages::find($metadata['packageId'] ?? null);
 
@@ -296,7 +339,17 @@ try {
 
             if ($type === 'payment_intent.succeeded') {
                 $fulfilment->fulfil($object);
+                $analytics->capture('checkout_webhook_received', (string) ($object['metadata']['visitorId'] ?? 'unknown'), [
+                    'type' => $type,
+                    'payment_intent' => (string) ($object['id'] ?? ''),
+                ]);
             } elseif ($type === 'payment_intent.payment_failed') {
+                $analytics->capture('checkout_payment_failed', (string) ($object['metadata']['visitorId'] ?? 'unknown'), [
+                    'payment_intent' => (string) ($object['id'] ?? ''),
+                    'reason' => (string) ($object['last_payment_error']['code'] ?? 'unknown'),
+                    'decline_code' => (string) ($object['last_payment_error']['decline_code'] ?? ''),
+                ]);
+
                 error_log(sprintf(
                     '[checkout] Payment failed for %s: %s',
                     (string) ($object['id'] ?? 'unknown'),

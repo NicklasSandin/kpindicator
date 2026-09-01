@@ -87,7 +87,27 @@ $publishableKey = $env->first(['STRIPE_PUBLISHABLE_KEY', 'NEXT_PUBLIC_STRIPE_PUB
 
 $checkoutEnv = strtolower($env->first(['CHECKOUT_ENV', 'APP_ENV'], 'development') ?? 'development');
 
+/**
+ * Funnel analytics. Flushed from a shutdown handler so an analytics outage
+ * cannot add latency to someone paying — under PHP-FPM the response has already
+ * gone to the browser by then.
+ */
+$analytics = new Analytics(
+    $env->first(['POSTHOG_KEY', 'NEXT_PUBLIC_POSTHOG_KEY']),
+    $env->first(['POSTHOG_HOST', 'NEXT_PUBLIC_POSTHOG_HOST'], 'https://us.i.posthog.com') ?? 'https://us.i.posthog.com',
+    $env->bool('CHECKOUT_ANALYTICS', true),
+);
+
+register_shutdown_function(static function () use ($analytics): void {
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    }
+
+    $analytics->flush();
+});
+
 return [
+    'analytics' => $analytics,
     'root' => $projectRoot,
     'env' => $env,
     'environment' => $checkoutEnv,

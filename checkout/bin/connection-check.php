@@ -31,6 +31,12 @@ $line = static fn (string $label, string $value): string => sprintf("  %-16s %s\
 
 echo "\nKPIndicator checkout — connection check\n\n";
 
+/** @var Analytics $analytics */
+$analytics = $app['analytics'];
+echo $line('analytics', $analytics->isConfigured()
+    ? 'OK  events go to PostHog'
+    : 'off  (no POSTHOG_KEY — funnel events only reach the PHP error log)');
+
 $session = Http::sessionsWork();
 echo $line('sessions', ($session['ok'] ? 'OK' : 'BROKEN') . '  ' . $session['path'] . '  (' . $session['detail'] . ')');
 
