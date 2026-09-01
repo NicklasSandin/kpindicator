@@ -207,7 +207,27 @@ try {
                 break;
             }
 
-            $intent = $stripe->retrievePaymentIntent($intentId);
+            try {
+                $intent = $stripe->retrievePaymentIntent($intentId);
+            } catch (StripeException $e) {
+                // A well-formed id Stripe has never heard of is a stale or
+                // forged link, not an outage. Letting it reach the catch-all
+                // would answer 502, which alarms the buyer and reads as a
+                // gateway incident in monitoring.
+                if ($e->stripeCode !== 'resource_missing' && $e->status !== 404) {
+                    throw $e;
+                }
+
+                $view->render('error', [
+                    'title' => 'That link has expired',
+                    'message' => 'We cannot find a payment behind this link. It may have expired, or been opened from an old email. If you completed a payment, your Stripe receipt is the proof — send it to us and we will sort it out. Do not pay again.',
+                    'siteUrl' => $app['site_url'],
+                    'linkLabel' => 'Back to pricing',
+                    'linkHref' => $app['site_url'] . '/pricing',
+                    'supportEmail' => $app['support_email'],
+                ], 404);
+                break;
+            }
 
             // Stripe's own recommended check: the client secret in the URL must
             // match the one on the intent, so a guessed id reveals nothing.
