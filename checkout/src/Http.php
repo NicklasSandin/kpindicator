@@ -173,8 +173,15 @@ final class Http
      */
     public static function sessionsWork(): array
     {
-        $path = self::sessionPath() ?? (string) ini_get('session.save_path');
+        $own = self::sessionPath();
+        $path = $own ?? (string) ini_get('session.save_path');
         $path = $path !== '' ? $path : sys_get_temp_dir();
+
+        // Say so when the app's own directory could not be used. Sessions may
+        // still work via the system path, but that path is the one whose
+        // ownership is set for a different web server on RHEL hosts, so
+        // "working" there is luck rather than configuration.
+        $fallback = $own === null ? ' [fallback — the app\'s own directory is unavailable]' : '';
 
         if (!is_dir($path)) {
             return ['ok' => false, 'path' => $path, 'detail' => 'directory does not exist'];
@@ -205,7 +212,7 @@ final class Http
 
         @unlink($probe);
 
-        return ['ok' => true, 'path' => $path, 'detail' => 'verified by writing as ' . $user];
+        return ['ok' => true, 'path' => $path . $fallback, 'detail' => 'verified by writing as ' . $user];
     }
 
     public static function csrfToken(): string
