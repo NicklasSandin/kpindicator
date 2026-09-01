@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { recordEmailEvent } from "@/lib/email-ingest";
 import { sesEventToNormalized } from "@/lib/ses-events";
-import { canonicalString, isAwsSigningUrl, verifySnsSignature, type SnsEnvelope } from "@/lib/sns-signature";
+import { isAwsSigningUrl, verifySnsSignature, type SnsEnvelope } from "@/lib/sns-signature";
 
 /**
  * Receives SES engagement events published to an SNS topic.
@@ -63,23 +63,14 @@ export async function POST(req: NextRequest) {
   if (!verified.ok) {
     console.warn(`[ses-webhook] rejected: ${verified.reason} (type=${envelope.Type ?? "none"})`);
 
-    // TEMPORARY DIAGNOSTIC — remove once the subscription confirms.
-    // Enough to replay the exact message offline and find the discrepancy,
-    // rather than guessing at it from a status code. The confirmation token
-    // this exposes is single-use and short-lived, but this is still a log of
-    // credential-shaped material and should not outlive the investigation.
-    if (process.env.SES_WEBHOOK_DEBUG === "1") {
+    if (verified.reason === "sha1_disabled_by_platform") {
       console.warn(
-        "[ses-webhook] DEBUG " +
-          JSON.stringify({
-            signatureVersion: envelope.SignatureVersion,
-            signingCertURL: envelope.SigningCertURL,
-            fieldsPresent: Object.keys(envelope),
-            canonical: canonicalString(envelope),
-            signature: envelope.Signature,
-          }),
+        "[ses-webhook] This host's crypto policy forbids SHA-1, which SNS SignatureVersion 1 uses. " +
+          "Set the topic's SignatureVersion to 2: aws sns set-topic-attributes " +
+          "--topic-arn <arn> --attribute-name SignatureVersion --attribute-value 2",
       );
     }
+
 
     return NextResponse.json({ error: "Invalid signature.", reason: verified.reason }, { status: 403 });
   }

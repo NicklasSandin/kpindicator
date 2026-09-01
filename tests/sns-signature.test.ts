@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import test from "node:test";
-import { canonicalString, isAwsSigningUrl, verifySnsSignature } from "../src/lib/sns-signature";
+import { canonicalString, isAwsSigningUrl, sha1VerificationAvailable, verifySnsSignature } from "../src/lib/sns-signature";
 
 /**
  * A real RSA keypair and a self-signed certificate, so the crypto path is
@@ -146,4 +146,24 @@ test("failures are distinguishable, so a 403 can be diagnosed", async () => {
   assert.deepEqual(await verifySnsSignature({ ...base }, async () => signer.pem), { ok: false, reason: "missing_signature" });
   assert.deepEqual(await verifySnsSignature({ ...base, Signature: "x", SigningCertURL: "https://evil.com/c.pem" }, async () => signer.pem), { ok: false, reason: "bad_cert_url" });
   assert.deepEqual(await verifySnsSignature({ ...base, Signature: "x" }, async () => null), { ok: false, reason: "cert_unavailable" });
+});
+
+test("a SHA-1 message on a host that forbids SHA-1 says so, rather than blaming the signature", async () => {
+  const signer = makeSigner();
+  const envelope = {
+    Type: "Notification", Message: "{}", MessageId: "m-9",
+    Timestamp: "2026-09-01T11:00:00.000Z", TopicArn: "arn:topic",
+    SignatureVersion: "1", SigningCertURL: CERT_URL, Signature: "",
+  };
+  envelope.Signature = signer.sign(canonicalString(envelope)!);
+
+  const result = await verifySnsSignature(envelope, async () => signer.pem);
+
+  // On a permissive host this verifies; on a RHEL-family one it must name the
+  // platform rather than report a mismatch, because those need opposite fixes.
+  if (sha1VerificationAvailable()) {
+    assert.deepEqual(result, { ok: true });
+  } else {
+    assert.deepEqual(result, { ok: false, reason: "sha1_disabled_by_platform" });
+  }
 });
