@@ -16,7 +16,7 @@ single JavaScript file exists only to mount Stripe's iframe and hand it back.
 ## Requirements
 
 - PHP **8.1+** with `curl`, `json` and `session`
-- `pdo_sqlite` if you want orders written into the local Prisma database
+- `pdo_pgsql` to record orders (`dnf install php-pgsql` / `apt install php8.3-pgsql`)
 - **No Composer.** There is no `vendor/` and no dependency to install.
   `src/Stripe.php` is a small REST client for the three endpoints this app uses.
 
@@ -148,15 +148,33 @@ stripe listen --forward-to localhost:8787/webhook
 
 ## Orders
 
-A successful payment writes a `User` and an `Order` row into the database named
-by `DATABASE_URL`, exactly as `prisma/schema.prisma` declares them — cuid ids,
-`DateTime` as integer milliseconds — so a purchase taken here appears in the
-Next.js client dashboard with no sync step.
+A successful payment writes into the same PostgreSQL database Prisma owns, and
+[Orders.php](src/Orders.php) is a direct port of the fulfilment half of
+`src/app/api/webhooks/stripe/route.ts` — same conventions, so an order taken
+here is indistinguishable from one taken through hosted Checkout:
 
-Recording is best-effort by design: a database that is unreachable, mid-migration
-or on Postgres never turns a successful charge into an error page. Point
-`DATABASE_URL` at Postgres and the Next.js webhook owns order recording instead.
-Stripe remains the ledger of record in every case.
+1. upsert the buyer by email
+2. take their earliest `OrganizationMember`, or create `<name>'s team` with them
+   as `OWNER` plus a `TEAM_CREATED` audit entry
+3. write the `Order` against that `organizationId`
+
+An `Order` belongs to an `Organization`, not a `User` — `Order.userId` was
+dropped in `20260830000000_add_organizations`.
+
+Three details of Prisma's PostgreSQL mapping the raw SQL has to respect: enums
+are native Postgres types and need `::"OrderStatus"`-style casts; every
+`createdAt`/`updatedAt` carries `DEFAULT CURRENT_TIMESTAMP`, so timestamps are
+left to the database; and ids are client-generated cuids.
+
+Idempotency is a transaction-scoped advisory lock keyed on the payment intent,
+because Prisma's only unique index here is on `stripeSessionId`, which this
+PaymentIntent flow never populates. The return page and the webhook can race
+freely — whichever lands first wins and the other is a no-op.
+
+Recording is best-effort by design: an unreachable database, a missing
+`pdo_pgsql`, or a non-Postgres `DATABASE_URL` logs and moves on rather than
+turning a successful charge into an error page. Stripe remains the ledger of
+record in every case.
 
 ## Layout
 
@@ -170,7 +188,7 @@ Stripe remains the ledger of record in every case.
 | `src/Pricing.php` | Resolves the amount — Stripe Price first, catalog second. |
 | `src/Packages.php` | The catalog, mirroring `src/content/packages.ts`. |
 | `src/Fulfilment.php` | What happens after a successful PaymentIntent. |
-| `src/Orders.php` | Prisma-compatible SQLite writer. |
+| `src/Orders.php` | Prisma-compatible PostgreSQL writer (user → org → order). |
 | `src/Http.php` | Routing, JSON, session, CSRF. |
 | `src/Env.php`, `src/View.php`, `src/Notifier.php` | Dotenv, templates, admin alerts. |
 | `bin/connection-check.php` | CLI self-check: key, account, API version, what's missing. |

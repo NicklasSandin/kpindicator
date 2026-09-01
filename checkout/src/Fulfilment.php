@@ -75,6 +75,7 @@ final class Fulfilment
             $package,
             $email,
             is_string($metadata['name'] ?? null) ? $metadata['name'] : null,
+            is_string($metadata['company'] ?? null) ? $metadata['company'] : null,
             $amount,
             $currency,
             $intentId,

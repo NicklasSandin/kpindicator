@@ -100,9 +100,9 @@ return [
 
     'pricing' => new Pricing($env, $stripe),
 
-    // Null when the database is unreachable or not SQLite — recording is
-    // best-effort, and Stripe stays the source of truth regardless.
-    'orders' => Orders::open($env->get('DATABASE_URL'), $projectRoot),
+    // Null when the database is unreachable or the driver is missing —
+    // recording is best-effort, and Stripe stays the source of truth regardless.
+    'orders' => Orders::open($env->get('DATABASE_URL')),
 
     'notifier' => new Notifier(
         $env->get('RESEND_API_KEY'),
