@@ -19,9 +19,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/validate", label: "Validate" },
-  { href: "/grow", label: "Grow" },
-  { href: "/incorporate", label: "Incorporate" },
+  { href: "/process", label: "How it works" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/case-studies", label: "Case Studies" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
@@ -62,8 +61,8 @@ export function SiteHeader() {
             <Link href="/signup">Sign up</Link>
           </Button>
           <Button asChild size="sm" className="h-9 px-4">
-            <Link href="/contact">
-              Book a call
+            <Link href="/contact?interest=idea-review">
+              Request an idea review
               <ArrowRight className="size-3.5" data-icon="inline-end" />
             </Link>
           </Button>
@@ -114,7 +113,7 @@ export function SiteHeader() {
               <div className="mt-4 px-4">
                 <SheetClose asChild>
                   <Button asChild className="w-full">
-                    <Link href="/contact">Book a validation call</Link>
+                    <Link href="/contact?interest=idea-review">Request an idea review</Link>
                   </Button>
                 </SheetClose>
               </div>

@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { Logo } from "@/components/logo";
 import { SignupForm } from "@/components/auth/signup-form";
+import { GoogleAuthButton } from "@/components/auth/google-auth-button";
+import { googleOAuthConfig } from "@/lib/google-oauth";
 
 export const metadata: Metadata = { title: "Create your account" };
 
@@ -26,6 +28,7 @@ export default async function SignupPage({
               : "Takes a minute. Just your name, email, and a password."}
           </p>
           <div className="mt-6">
+            <GoogleAuthButton enabled={Boolean(googleOAuthConfig())} next={params.invite ? `/invite/${params.invite}` : undefined} />
             <SignupForm invitationToken={params.invite} invitedEmail={params.email} />
           </div>
         </div>

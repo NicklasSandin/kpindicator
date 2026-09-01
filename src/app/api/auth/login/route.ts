@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, createSession } from "@/lib/auth";
+import { rateLimit, requestIp } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
   email: z.string().email().max(200),
@@ -12,6 +13,10 @@ const bodySchema = z.object({
 const GENERIC_ERROR = "That email and password don't match an account.";
 
 export async function POST(req: NextRequest) {
+  const limit = rateLimit(`login:${requestIp(req.headers)}`, 10, 15 * 60 * 1000);
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Too many attempts. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } });
+  }
   const json = await req.json().catch(() => null);
   const parsed = bodySchema.safeParse(json);
 

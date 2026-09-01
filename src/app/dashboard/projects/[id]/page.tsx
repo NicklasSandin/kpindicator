@@ -70,10 +70,12 @@ export default async function ProjectDetailPage({
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <MetricCard label="Visitors" value={formatNumber(totals.visitors)} />
         <MetricCard label="Leads" value={formatNumber(totals.leads)} />
         <MetricCard label="Conversion rate" value={formatPercent(totals.conversionRate)} />
+        <MetricCard label="Qualified actions" value={formatNumber(totals.signups)} detail="Signups or booked next steps" />
+        <MetricCard label="Deposits / preorders" value={formatNumber(totals.preorders)} detail="Strongest intent signal" />
         <MetricCard
           label="Media spend"
           value={formatCents(totals.spendCents)}
@@ -116,7 +118,7 @@ export default async function ProjectDetailPage({
                   )}
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 sm:grid-cols-4">
+                <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 sm:grid-cols-5">
                   <div>
                     <p className="text-xs text-muted-foreground">Visitors</p>
                     <p className="mt-0.5 text-sm font-semibold text-foreground">
@@ -135,12 +137,8 @@ export default async function ProjectDetailPage({
                       {formatPercent(ideaTotals.conversionRate)}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Campaigns</p>
-                    <p className="mt-0.5 text-sm font-semibold text-foreground">
-                      {idea.campaigns.length}
-                    </p>
-                  </div>
+                  <div><p className="text-xs text-muted-foreground">Qualified actions</p><p className="mt-0.5 text-sm font-semibold text-foreground">{formatNumber(ideaTotals.signups)}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Deposits / preorders</p><p className="mt-0.5 text-sm font-semibold text-foreground">{formatNumber(ideaTotals.preorders)}</p></div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-1.5">

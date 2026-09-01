@@ -16,28 +16,27 @@ excluded from the sitemap and robots.txt. Reachable directly at `/admin`.
   showing exactly who opened what, how many times, and when they last clicked — sorted with the
   most-engaged recipients first.
 - **`/admin/campaigns/new`** — create a campaign and paste in a recipient list (`Name <email>,
-  Company`, one per line, duplicates merged automatically). This does **not** send anything — it
-  creates the campaign as a draft with recipients marked pending, giving you a place to track a
-  send you make through whatever tool you're currently using.
+  Company`, one per line, duplicates merged automatically). Choose one of three concise starter
+  sequences, edit the subject and plain-text message, and create a reviewable draft.
+- **Preview and explicit send** — campaign detail shows the exact draft, supports a test message,
+  and sends pending recipients through Amazon SES only after an admin confirms. Sends are capped
+  at 50 recipients per batch.
+- **Suppression and unsubscribe** — signed unsubscribe links write to a global suppression list.
+  Bounces and complaints are also suppressed and cannot be silently re-imported later.
 
-## What's intentionally not built yet
+## Production setup still required
 
-**Actually sending email.** No ESP (Resend, Postmark, SendGrid, Mailgun, Loops, etc.) is wired
-up — sending settings are still pending. Building against the wrong provider's API would mean
-throwing that work away, so this repo ships the tracking/reporting layer now (useful regardless
-of provider) and leaves sending as a clearly-scoped follow-up.
+Sending uses Amazon SES. It stays disabled unless credentials, `SES_FROM_EMAIL`, and
+`EMAIL_PHYSICAL_ADDRESS` are configured. Before production, verify the sender domain, publish SPF,
+DKIM, and DMARC, request SES production access, set `EMAIL_UNSUBSCRIBE_SECRET`, and configure a
+signed event adapter. The generic `/api/webhooks/email` endpoint fails closed in production when
+`EMAIL_WEBHOOK_SECRET` is absent.
 
-## Wiring up a real ESP, once one is chosen
+## Provider event adapter
 
-Two things need to happen:
-
-**1. Sending.** Whichever provider is picked, sending a campaign becomes: iterate
-`EmailCampaign.recipients`, call the provider's send API per recipient (or their batch/broadcast
-API), and set `EmailCampaign.status = "SENDING"` then `"SENT"`. Worth tagging each send with our
-`recipientId` in the provider's metadata/custom-args field if it supports one — that makes
-webhook matching in step 2 exact instead of best-effort.
-
-**2. Receiving engagement events.** Point the provider's webhook at
+Sending is implemented behind `src/lib/campaign-email.ts`; replacing SES means swapping that
+adapter without changing campaign state or suppression rules. Receiving engagement events still
+needs a thin, signed SES/SNS adapter. Map the provider event into
 [`/api/webhooks/email`](../src/app/api/webhooks/email/route.ts). That endpoint already accepts a
 normalized event shape:
 
@@ -78,6 +77,6 @@ timestamp) → `EmailEvent` (append-only log of every individual event, for the 
 for recomputing rollups if needed). Same append-only-events-rolled-up-to-current-state pattern as
 `MetricSnapshot` elsewhere in the schema.
 
-Status progression is monotonic — an out-of-order webhook (e.g. a delayed "delivered" event
-arriving after "opened" was already recorded) won't downgrade a recipient's status. See the
-`ENGAGEMENT_RANK` comment in `/api/webhooks/email/route.ts`.
+Status progression is monotonic — an out-of-order webhook cannot downgrade engagement, and a
+terminal unsubscribe, bounce, or complaint cannot be reversed by a later open. See
+`src/lib/email-events.ts`.

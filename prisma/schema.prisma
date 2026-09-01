@@ -100,6 +100,7 @@ enum EmailCampaignStatus {
   SENDING
   SENT
   PAUSED
+  FAILED
 }
 
 enum EmailRecipientStatus {
@@ -142,6 +143,21 @@ model User {
   memberships        OrganizationMember[]
   sessions           Session[]
   verificationTokens EmailVerificationToken[]
+  oauthAccounts      OAuthAccount[]
+}
+
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  provider          String
+  providerAccountId String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
+  @@index([userId])
 }
 
 model EmailVerificationToken {
@@ -328,13 +344,21 @@ model Report {
 }
 
 model ContactSubmission {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  company   String?
-  interest  String?
-  message   String
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  name           String
+  email          String
+  company        String?
+  interest       String?
+  message        String
+  currentStage   String?
+  targetCustomer String?
+  priorTests     String?
+  budget         String?
+  timeline       String?
+  status         String   @default("NEW")
+  createdAt      DateTime @default(now())
+
+  @@index([status, createdAt])
 }
 
 model Order {
@@ -368,6 +392,9 @@ model EmailCampaign {
   fromName    String?
   fromEmail   String?
   audience    String?
+  bodyText    String              @default("")
+  bodyHtml    String?
+  templateKey String?
   status      EmailCampaignStatus @default(DRAFT)
   scheduledAt DateTime?
   sentAt      DateTime?
@@ -375,6 +402,17 @@ model EmailCampaign {
   updatedAt   DateTime            @updatedAt
 
   recipients EmailRecipient[]
+}
+
+model EmailSuppression {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  reason    String
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reason])
 }
 
 model EmailRecipient {

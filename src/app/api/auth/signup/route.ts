@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, createSession } from "@/lib/auth";
 import { notifyAdmin } from "@/lib/notify";
 import { sendVerificationEmail } from "@/lib/email-verification";
+import { rateLimit, requestIp } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
   name: z.string().min(1).max(200),
@@ -15,6 +16,10 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const limit = rateLimit(`signup:${requestIp(req.headers)}`, 5, 60 * 60 * 1000);
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Too many signup attempts. Please wait and try again." }, { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } });
+  }
   const json = await req.json().catch(() => null);
   const parsed = bodySchema.safeParse(json);
 

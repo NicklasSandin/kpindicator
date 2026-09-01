@@ -3,9 +3,9 @@
 Source of truth: [`prisma/schema.prisma`](../prisma/schema.prisma). This doc explains the
 *why* behind the shape — read the schema file for the exact fields and types.
 
-SQLite locally (zero-setup, file-based — see `prisma/dev.db`), swap to Postgres in production
-by changing `provider` and `DATABASE_URL` in `prisma/schema.prisma`; the schema itself is
-already Postgres-compatible (no SQLite-only types are used).
+PostgreSQL is the source of truth in development and production. Configure `DATABASE_URL`, use
+`prisma migrate dev` only for local migration development, and use `prisma migrate deploy` in
+production.
 
 ## Entity relationship diagram
 
@@ -122,8 +122,8 @@ connected to `User`/`Project` — these are prospects, not clients yet. See
 
 ## Where it's read
 
-- `src/lib/current-user.ts` — placeholder auth; single lookup function every dashboard page
-  calls through, so real auth is a one-file swap later.
+- `src/lib/auth.ts` — first-party cookie sessions; `current-user.ts`, `current-admin.ts`, and
+  organization helpers enforce audience and authorization boundaries.
 - `src/app/dashboard/**/page.tsx` — all dashboard reads, via `prisma` directly in Server
   Components (no API layer needed for first-party reads).
 - `src/app/api/webhooks/stripe/route.ts` — the only writer of `Order` rows outside `prisma/seed.ts`.
@@ -132,9 +132,9 @@ connected to `User`/`Project` — these are prospects, not clients yet. See
 
 ## Extending it
 
-Adding real auth: add a `Session`/`Account` model (or point `getCurrentUser()` at your auth
-provider's session) — nothing else in the dashboard needs to change, since every page already
-reads through that one function.
+Authentication is implemented. If replacing it with a managed provider, keep
+`getCurrentUser()`, `getCurrentAdmin()`, and organization membership checks as the application
+boundary so pages and mutations cannot bypass tenant isolation.
 
 Team accounts use `OrganizationMember` as the authorization boundary. Projects and orders belong
 to an organization, and users can switch between every organization in which they have a

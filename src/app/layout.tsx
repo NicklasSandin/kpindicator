@@ -22,22 +22,22 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "KPIndicator — Test what hits before you build it",
+    default: "KPIndicator — Know Which Idea Customers Want Before You Build It",
     template: "%s — KPIndicator",
   },
   description:
-    "KPIndicator runs real traffic against your 3-5 best ideas, measures what actually converts, and hands you a clear go/no-go — then builds the one that hits.",
+    "KPIndicator tests your offer with a real landing page, targeted outreach, and measurable buyer behavior—then gives you a clear go, pivot, or no-go recommendation.",
   openGraph: {
-    title: "KPIndicator — Test what hits before you build it",
+    title: "KPIndicator — Know Before You Build",
     description:
-      "Done-for-you market validation. Real landing pages, real traffic, real demand data — before you spend a dollar building.",
+      "Done-for-you demand validation using real landing pages, targeted outreach, and buyer behavior before you fund the build.",
     url: siteUrl,
     siteName: "KPIndicator",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "KPIndicator — Test what hits before you build it",
+    title: "KPIndicator — Know Before You Build",
     description:
       "Done-for-you market validation. Real traffic, real demand data, a clear go/no-go — before you build.",
   },

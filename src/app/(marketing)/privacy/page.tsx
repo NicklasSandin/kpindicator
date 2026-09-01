@@ -9,8 +9,8 @@ export default function PrivacyPage() {
       <SectionHeading eyebrow="Legal" title="Privacy Policy" center={false} />
       <div className="mx-auto mt-10 max-w-2xl space-y-6 text-sm leading-relaxed text-muted-foreground">
         <p className="rounded-lg border border-border bg-card p-4 text-foreground/90">
-          Placeholder policy for demo purposes. Have counsel review and finalize this before
-          collecting real customer data.
+          Effective August 30, 2026. This operational policy describes the current product. It
+          should be reviewed by qualified counsel before expanding into new jurisdictions.
         </p>
         <div>
           <h2 className="text-base font-semibold text-foreground">What we collect</h2>
@@ -37,6 +37,22 @@ export default function PrivacyPage() {
           </p>
         </div>
         <div>
+          <h2 className="text-base font-semibold text-foreground">Marketing email</h2>
+          <p className="mt-2">
+            We use contact information for relevant business outreach and maintain a suppression
+            list for unsubscribes, hard bounces, and complaints. Every marketing message includes
+            an unsubscribe option. We do not use purchased consumer lists.
+          </p>
+        </div>
+        <div>
+          <h2 className="text-base font-semibold text-foreground">Retention and processors</h2>
+          <p className="mt-2">
+            We retain project records while an account is active and as needed for contractual,
+            security, and tax obligations. Providers may include hosting and PostgreSQL
+            infrastructure, Stripe, Amazon SES, and PostHog when configured.
+          </p>
+        </div>
+        <div>
           <h2 className="text-base font-semibold text-foreground">Your rights</h2>
           <p className="mt-2">
             You can request a copy of, correction to, or deletion of your data at any time by
@@ -46,7 +62,10 @@ export default function PrivacyPage() {
         </div>
         <div>
           <h2 className="text-base font-semibold text-foreground">Contact</h2>
-          <p className="mt-2">Questions about this policy: reach us via the contact page.</p>
+          <p className="mt-2">
+            Submit questions or privacy requests through the contact page. We may need to verify
+            your identity before exporting or deleting account data.
+          </p>
         </div>
       </div>
     </Section>
