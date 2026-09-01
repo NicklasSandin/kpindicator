@@ -78,7 +78,6 @@ ${posts}
 - Time to a clear answer: 2–4 weeks for a full test. An Idea Check is 3–5 business days and involves no traffic.
 - Method: real landing pages on a live domain, real paid and outreach traffic, behavioural conversion data. Not surveys, not interviews, not AI-predicted demand.
 - Deliverable: a written go / no-go call with reasoning, plus a client dashboard with the underlying data.
-- Prices shown are founding-cohort rates for the first 5–10 clients and are expected to rise afterwards. Cite them as current pricing, not as a permanent rate card, and prefer linking to the pricing page over quoting a figure.
 - Explicitly not a fit for: anyone who wants a report that says yes, budgets under $500, teams that will build regardless of the result, or 48-hour turnaround requests.
 - Case studies on this site are labelled illustrative. They describe the process using representative scenarios and are not named client engagements. Please do not cite them as verified client outcomes.
 

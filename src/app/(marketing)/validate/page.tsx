@@ -82,7 +82,7 @@ export default function ValidatePage() {
         <SectionHeading
           eyebrow="Proof"
           title="What the process actually surfaces"
-          description="Illustrative examples of the kind of result a real sprint produces — real case studies are being published as our founding cohort completes theirs."
+          description="Illustrative examples of the kind of result a real sprint produces — real case studies are being published as client engagements complete."
         />
         <div className="mt-14">
           <ProofSection caseStudies={caseStudies} />

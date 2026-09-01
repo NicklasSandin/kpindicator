@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Timer } from "lucide-react";
 
 import { JsonLd } from "@/components/json-ld";
 import { serviceSchemas } from "@/lib/seo";
@@ -8,7 +7,6 @@ import { PricingCards } from "@/components/marketing/pricing-cards";
 import { PricingComparisonTable } from "@/components/marketing/pricing-comparison-table";
 import { FAQAccordion } from "@/components/marketing/faq-accordion";
 import { CTASection } from "@/components/marketing/cta-section";
-import { Badge } from "@/components/ui/badge";
 import { FAQS } from "@/content/faqs";
 import { AnalyticsEvent } from "@/components/analytics-event";
 
@@ -26,12 +24,6 @@ export default function PricingPage() {
       <JsonLd schema={serviceSchemas()} />
       <AnalyticsEvent event="pricing_viewed" />
       <Section border={false} className="pb-8">
-        <div className="mx-auto mb-5 max-w-2xl text-center">
-          <Badge variant="secondary" className="gap-1.5 px-3 py-1 text-xs font-medium">
-            <Timer className="size-3" />
-            Founding cohort — first 5-10 clients only
-          </Badge>
-        </div>
         <SectionHeading
           eyebrow="Pricing"
           title="Flat pricing, per idea"

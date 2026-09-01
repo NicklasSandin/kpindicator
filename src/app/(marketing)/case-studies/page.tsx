@@ -21,7 +21,7 @@ export default function CaseStudiesPage() {
         <SectionHeading
           eyebrow="Case studies"
           title="How this reads in practice"
-          description="Illustrative examples built to show how a KPIndicator report actually reads. Case studies from our founding cohort's real engagements are being published as they complete."
+          description="Illustrative examples built to show how a KPIndicator report actually reads. Case studies from real client engagements are being published as they complete."
         />
       </Section>
 

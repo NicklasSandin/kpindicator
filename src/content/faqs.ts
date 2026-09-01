@@ -31,12 +31,6 @@ export const FAQS: FAQ[] = [
   },
   {
     category: "pricing",
-    question: "Why does Market Test cost $2,500 right now instead of more?",
-    answer:
-      "We're running introductory pricing for our first 5-10 clients while we build out a public case study library from real results. Once that cohort is through, Market Test moves to its standard $4,500-$6,000 range. Locking in now gets you the same process at the founding rate.",
-  },
-  {
-    category: "pricing",
     question: "Is the ad spend included in the package price?",
     answer:
       "No — our fee covers strategy, build, setup, measurement, and reporting. Media spend (the actual ad budget) is separate and goes directly to the ad platforms, typically $500-$3,000 per idea depending on the package and market. We agree on a specific number with you before anything goes live.",
