@@ -36,21 +36,63 @@ Want me to send you a quick validation angle for your shortlist?
     ],
   },
   {
-    key: "agency-studio",
-    name: "Agency or venture studio",
-    subject: "A faster way to reject weak ideas",
+    key: "venture-studio",
+    name: "Venture studio — batch triage",
+    subject: "Killing the weak ideas before your team builds them",
     bodyText: `Hi {{firstName}},
 
-Studios lose expensive design and development time when weak ideas survive too long.
+Studios don't lose money on the ideas they reject. They lose it on the ones that survive three months of design and build before anyone finds out.
 
-KPIndicator provides a repeatable validation layer: landing pages, targeted outreach, buyer signals, and a clear recommendation before delivery resources are committed.
+We run the demand test first: a real landing page per idea, real paid and outreach traffic, and a ranked go / no-go across the batch. Two to four weeks, before a developer touches anything.
 
-Want me to send you a quick validation angle for one idea in the pipeline?
+Being straight with you — we're early and taking on five clients at a reduced rate in exchange for permission to publish the results. You get the work cheaper, we get a case study with real numbers instead of an illustrative one.
+
+If {{company}} has a batch coming up, I'll show you how we'd rank it.
 
 — {{senderName}}`,
     followUps: [
-      `Hi {{firstName}}, this can run under your agency’s brand and gives the client evidence either way—not a report designed to justify a build. Want a sample test structure?`,
-      `Last note, {{firstName}}. If you ever need an outside validation layer before scoping a build, I’m happy to show you the process.`,
+      `Hi {{firstName}}, the part studios usually push on is the threshold — what number actually counts as a go. We agree that with you before any traffic runs, so the result isn't arguable after the fact. Happy to show you how we set it.`,
+      `Last one from me, {{firstName}}. If a batch comes up later and you want an outside read before committing build time, the offer stands.`,
+    ],
+  },
+  {
+    key: "agency-white-label",
+    name: "Agency — white-label validation",
+    subject: "Validation for your clients, under your brand",
+    bodyText: `Hi {{firstName}},
+
+When a client asks {{company}} to build something, "we tested it, here's what buyers actually did" is a better conversation than "here's our estimate."
+
+We run that test white-label: landing page, real traffic, qualified leads, and a written go / no-go your client can act on. You keep the relationship and the build work — we just supply the evidence.
+
+Being straight: we're early and doing five engagements at a reduced rate in exchange for permission to publish the results, anonymised if your client prefers.
+
+If someone's about to commit to a build on a hunch, I'll show you what we'd run.
+
+— {{senderName}}`,
+    followUps: [
+      `Hi {{firstName}}, the useful version of this is running it before the proposal rather than after — it changes what you're able to quote for. Happy to sketch how that sequences.`,
+      `Closing the loop, {{firstName}}. If a client project ever needs outside demand evidence, I can outline the process in ten minutes.`,
+    ],
+  },
+  {
+    key: "corporate-innovation",
+    name: "Corporate innovation — stage gate evidence",
+    subject: "Outside demand evidence for the stage gate",
+    bodyText: `Hi {{firstName}},
+
+The hard part of an internal innovation case usually isn't the idea. It's that every number supporting it came from inside the building.
+
+We produce the outside evidence: a real landing page, real paid traffic, measured conversion, and a written go / no-go against a threshold agreed before the test runs — so the result isn't something anyone can re-argue afterwards.
+
+Being straight: we're early and taking five clients at a reduced rate in exchange for permission to publish results, anonymised if procurement needs that.
+
+If there's an initiative heading for a gate, I'll outline what we'd test.
+
+— {{senderName}}`,
+    followUps: [
+      `Hi {{firstName}}, the detail that matters for a committee is agreeing the go / no-go number up front. It turns the result into a decision rather than a discussion. Happy to share how we word it.`,
+      `Last note, {{firstName}}. If an initiative needs external validation before funding, I'm easy to reach.`,
     ],
   },
 ] as const;
