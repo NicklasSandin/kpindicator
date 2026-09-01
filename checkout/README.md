@@ -120,10 +120,41 @@ server {
 }
 ```
 
+A ready vhost for the production host is in
+[deploy/nginx-checkout.conf](deploy/nginx-checkout.conf) — nginx 1.26, PHP 8.3
+FPM on `/run/php-fpm/www.sock`, matching how the BrandSentryPro vhost on the
+same box connects.
+
 ### Apache
 
 `public/.htaccess` already carries the rewrite. Point the vhost's `DocumentRoot`
 at `checkout/public` and allow `.htaccess` overrides.
+
+### Who can read the secrets
+
+PHP-FPM does not necessarily run as the user that owns the repo — on the
+production host the pool runs as `nginx` while the checkout is owned by
+`almalinux`. A `600` `.env` owned by the repo user is then unreadable to PHP,
+and the failure is silent: the page simply reports that payments are not
+configured. Give it owner-edit, group-read, world-nothing:
+
+```bash
+sudo chown almalinux:nginx checkout/.env && sudo chmod 640 checkout/.env
+```
+
+Then confirm with the check running **as the FPM user**, not as yourself:
+
+```bash
+sudo -u nginx php checkout/bin/connection-check.php
+```
+
+### Scripted deploy
+
+[deploy/deploy.sh](deploy/deploy.sh) does the whole sequence — ownership, fetch,
+`npm ci`, migrations, build, `pdo_pgsql`, permissions, connection check,
+restarts — and stops at the first failure rather than half-deploying. It resets
+the working tree to `origin/main`, so check `git status` on the host before the
+first run.
 
 Behind a proxy or on a subpath, set `CHECKOUT_BASE_URL` — Stripe's `return_url`
 is built from it, and a wrong value sends buyers to a dead page after paying.
