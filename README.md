@@ -3,8 +3,9 @@
 Done-for-you market validation and product-building. We test 3-5 of your ideas with real
 landing pages and real traffic, tell you what actually converts, and build the one that hits.
 
-This repo is the full marketing site + client dashboard, built to run standalone with a local
-SQLite database and demo data — no external accounts required to see it working end to end.
+This repo is the full marketing site, authenticated client dashboard, and internal email
+acquisition workspace. It uses PostgreSQL and deterministic demo data. Stripe, PostHog, and SES
+remain optional for local browsing; their production actions stay unavailable until configured.
 
 ## Stack
 
@@ -12,8 +13,8 @@ SQLite database and demo data — no external accounts required to see it workin
   currently resolves to Next 16; see the note in `docs/` history / commit log if reconciling.
 - **Tailwind CSS v4** (CSS-first config, no `tailwind.config.js`) + **shadcn/ui** (Nova preset —
   Radix primitives, Lucide icons, Geist font)
-- **Prisma 6** + **SQLite** for local dev (swap the datasource for Postgres in production — see
-  [`docs/database-schema.md`](docs/database-schema.md))
+- **Prisma 6** + **PostgreSQL** in development and production — see
+  [`docs/database-schema.md`](docs/database-schema.md)
 - **Stripe** for checkout (works without keys configured — see [Stripe setup](#stripe))
 - **PostHog** for analytics (no-ops without a key configured)
 - **MDX** (`next-mdx-remote` + `remark-gfm`) for case studies and blog content — see
@@ -109,21 +110,37 @@ To go live:
 
 ## Email campaign tracking
 
-`/admin` is where KPIndicator's own outbound marketing (emailing prospective clients) gets tracked —
-opens, clicks, bounces, and a per-recipient breakdown of who's engaging. It's separate from a
-client's idea being tested via email as part of their project (that's `Channel.EMAIL` in the main
-schema). No email provider is wired up for sending yet; see
-[`docs/email-campaigns.md`](docs/email-campaigns.md) for what's built now, what's deliberately
-not, and how to connect a real ESP once one's chosen.
+`/admin` manages KPIndicator's own outbound marketing: editable starter sequences, recipient
+import and deduplication, preview/test sends, explicit SES batch sends, engagement events, and
+global suppression for unsubscribes, bounces, and complaints. It is separate from email used to
+test a client's idea (`Channel.EMAIL`). See [`docs/email-campaigns.md`](docs/email-campaigns.md).
 
 ## Auth note
 
-Neither portal has real authentication — both are placeholders reading live rows from the
-database. `/dashboard` reads one seeded demo client (`jordan@northbeamstudio.co`) through
-[`getCurrentUser()`](src/lib/current-user.ts); `/admin` reads one seeded internal user
-(`ops@kpindicator.co`) through [`getCurrentAdmin()`](src/lib/current-admin.ts). Every page in each
-portal reads through its one function, so swapping in real auth (NextAuth, Clerk, etc.) means
-changing those two files, not every page.
+The app supports email/password and Google OpenID Connect. First-party sessions use random tokens
+with only SHA-256 hashes stored in PostgreSQL; passwords use scrypt. Google login uses the server
+authorization-code flow with state, nonce, PKCE, signed ID-token validation, and Google `sub`
+account identifiers. Organization membership and optional project restrictions bound client
+access; `/admin` requires an `ADMIN` role. Seed users are illustrative records and do not receive
+production credentials.
+
+## Production checklist
+
+1. Create PostgreSQL and run `npx prisma migrate deploy`; seed only non-production/demo databases.
+2. Set `NEXT_PUBLIC_SITE_URL` to the canonical HTTPS origin.
+3. Create a Google Cloud OAuth 2.0 Web application, configure the consent screen, and register the
+   exact redirect URI `https://kpindicator.com/api/auth/google/callback`. Set `GOOGLE_CLIENT_ID`
+   and `GOOGLE_CLIENT_SECRET`; the login button remains disabled until both are present.
+4. Configure Stripe products, price IDs, and a signed webhook for
+   `checkout.session.completed` at `/api/webhooks/stripe`.
+5. Verify the SES sending domain, SPF, DKIM, and DMARC; request production sending access; set the
+   SES variables, physical postal address, unsubscribe secret, and webhook secret.
+6. Map SES delivery/bounce/complaint events to the normalized `/api/webhooks/email` payload or add
+   a signed SES adapter route before relying on provider engagement reporting.
+7. Configure PostHog if desired and document consent requirements for the deployment region.
+8. Put the app behind HTTPS and a reverse proxy/CDN. Replace the included single-process rate
+   limiter with shared Redis/edge rate limiting when running multiple instances.
+9. Have qualified counsel review privacy, terms, outreach practices, and the engagement agreement.
 
 ## Scripts
 

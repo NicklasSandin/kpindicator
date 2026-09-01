@@ -4,6 +4,7 @@ import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/select";
 
 const INTERESTS = [
+  { value: "idea-review", label: "Free idea review" },
   { value: "call", label: "Book a validation call" },
   { value: "idea-check", label: "Idea Check — $995" },
   { value: "market-test", label: "Market Test — $2,500" },
@@ -34,6 +36,13 @@ export function ContactForm() {
   const [submitting, setSubmitting] = React.useState(false);
   const [submitted, setSubmitted] = React.useState(false);
   const [interest, setInterest] = React.useState(defaultInterest);
+  const started = React.useRef(false);
+
+  function markStarted() {
+    if (started.current) return;
+    started.current = true;
+    if (posthog.__loaded) posthog.capture("idea_review_started");
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,6 +56,11 @@ export function ContactForm() {
       company: String(formData.get("company") ?? ""),
       interest,
       message: String(formData.get("message") ?? ""),
+      currentStage: String(formData.get("currentStage") ?? ""),
+      targetCustomer: String(formData.get("targetCustomer") ?? ""),
+      priorTests: String(formData.get("priorTests") ?? ""),
+      budget: String(formData.get("budget") ?? ""),
+      timeline: String(formData.get("timeline") ?? ""),
       website: String(formData.get("website") ?? ""),
     };
 
@@ -64,6 +78,7 @@ export function ContactForm() {
       }
 
       setSubmitted(true);
+      if (posthog.__loaded) posthog.capture("idea_review_submitted", { interest });
       form.reset();
     } catch {
       toast.error("Couldn't send that. Check your connection and try again.");
@@ -88,7 +103,7 @@ export function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} onFocus={markStarted} className="space-y-5">
       {/* Honeypot — hidden from real users, bots tend to fill every field. */}
       <input
         type="text"
@@ -108,6 +123,32 @@ export function ContactForm() {
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" required placeholder="you@company.com" />
         </div>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="currentStage">Current stage</Label>
+          <select id="currentStage" name="currentStage" defaultValue="idea" className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm">
+            <option value="idea">Idea only</option>
+            <option value="research">Research or interviews</option>
+            <option value="prototype">Prototype or MVP</option>
+            <option value="live">Live product or offer</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="timeline">When do you need the decision?</Label>
+          <select id="timeline" name="timeline" defaultValue="1-3-months" className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm">
+            <option value="within-month">Within a month</option>
+            <option value="1-3-months">In 1–3 months</option>
+            <option value="3-plus-months">More than 3 months</option>
+            <option value="exploring">Just exploring</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="targetCustomer">Who do you expect to buy it?</Label>
+        <Input id="targetCustomer" name="targetCustomer" required minLength={2} maxLength={1000} placeholder="Independent accounting firms with 5–25 employees" />
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -133,7 +174,7 @@ export function ContactForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="message">What are you trying to figure out?</Label>
+        <Label htmlFor="message">What are you considering building?</Label>
         <Textarea
           id="message"
           name="message"
@@ -144,9 +185,26 @@ export function ContactForm() {
         />
       </div>
 
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="priorTests">What have you tested? (optional)</Label>
+          <Textarea id="priorTests" name="priorTests" maxLength={2000} rows={3} placeholder="Interviews, waitlist, ads, sales calls, or nothing yet" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="budget">Validation budget (optional)</Label>
+          <select id="budget" name="budget" defaultValue="" className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm">
+            <option value="">Prefer not to say</option>
+            <option value="under-1000">Under $1,000</option>
+            <option value="1000-3000">$1,000–$3,000</option>
+            <option value="3000-6000">$3,000–$6,000</option>
+            <option value="6000-plus">$6,000+</option>
+          </select>
+        </div>
+      </div>
+
       <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
         {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-        Send message
+        Request my idea review
       </Button>
     </form>
   );

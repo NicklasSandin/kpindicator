@@ -6,9 +6,9 @@ import { Section, SectionHeading } from "@/components/marketing/section";
 import { ContactForm } from "@/components/marketing/contact-form";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "Request an Idea Review",
   description:
-    "Book a validation call or send us your ideas directly. We read every message ourselves and reply within one business day.",
+    "Tell KPIndicator what you may build. We'll reply with a practical validation angle and an honest assessment of whether a paid test fits.",
 };
 
 const EXPECTATIONS = [
@@ -33,9 +33,9 @@ export default function ContactPage() {
   return (
     <Section border={false} className="pb-24">
       <SectionHeading
-        eyebrow="Contact"
-        title="Tell us what you're trying to figure out"
-        description="Book a validation call, or send us your ideas directly — either way, a real operator reads this and replies."
+        eyebrow="Free idea review"
+        title="What are you considering building?"
+        description="Share the idea and the buyer you have in mind. We'll reply with a practical way to test demand—and tell you honestly if you don't need us yet."
       />
 
       <div className="mx-auto mt-14 grid max-w-4xl gap-10 lg:grid-cols-[1fr_1.3fr]">

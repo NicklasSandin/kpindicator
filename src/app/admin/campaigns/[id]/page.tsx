@@ -11,6 +11,8 @@ import { MetricCard } from "@/components/metric-card";
 import { EmailFunnel } from "@/components/admin/email-funnel";
 import { RecipientTable } from "@/components/admin/recipient-table";
 import { Badge } from "@/components/ui/badge";
+import { CampaignActions } from "@/components/admin/campaign-actions";
+import { campaignEmailConfigured } from "@/lib/campaign-email";
 
 export async function generateMetadata({
   params,
@@ -72,6 +74,15 @@ export default async function AdminCampaignDetailPage({
         <MetricCard label="Open rate" value={totals.sent > 0 ? formatPercent(totals.openRate) : "—"} detail={`${totals.opened} opened`} />
         <MetricCard label="Click rate" value={totals.sent > 0 ? formatPercent(totals.clickRate) : "—"} detail={`${totals.clicked} clicked`} />
         <MetricCard label="Bounce rate" value={totals.sent > 0 ? formatPercent(totals.bounceRate) : "—"} detail={`${totals.bounced} bounced`} />
+      </div>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h2 className="text-sm font-semibold text-foreground">Message preview</h2>
+          <p className="mt-2 text-xs font-medium text-muted-foreground">Subject: {campaign.subject}</p>
+          <pre className="mt-4 whitespace-pre-wrap font-sans text-sm leading-6 text-foreground">{campaign.bodyText || "No message body."}</pre>
+        </div>
+        <CampaignActions campaignId={campaign.id} canSend={campaignEmailConfigured()} />
       </div>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-2">

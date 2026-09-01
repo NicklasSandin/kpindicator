@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import type { EmailEventType } from "@prisma/client";
-
 import { prisma } from "@/lib/prisma";
+import { EVENT_TO_STATUS, shouldAdvanceEmailStatus } from "@/lib/email-events";
 
 /**
  * Generic, provider-agnostic ingestion endpoint for outbound email engagement
- * events (opens, clicks, bounces, etc.). No ESP is wired up yet — once one
- * is chosen, add a thin adapter that translates its webhook payload into
- * this normalized shape and forwards it here (or inline the mapping in this
- * route). See docs/email-campaigns.md.
+ * events (opens, clicks, bounces, etc.). SES sending is implemented separately;
+ * add a thin signed SES/SNS adapter that translates provider payloads into this
+ * normalized shape. See docs/email-campaigns.md.
  *
  * Body shape:
  *   {
@@ -37,33 +35,11 @@ const bodySchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
-const EVENT_TO_STATUS: Record<string, EmailEventType> = {
-  sent: "SENT",
-  delivered: "DELIVERED",
-  opened: "OPENED",
-  clicked: "CLICKED",
-  bounced: "BOUNCED",
-  complained: "COMPLAINED",
-  unsubscribed: "UNSUBSCRIBED",
-  failed: "FAILED",
-};
-
-/** Lower = more engaged. Prevents an out-of-order webhook (e.g. a delayed
- * "delivered" arriving after "opened") from downgrading recorded status. */
-const ENGAGEMENT_RANK: Record<string, number> = {
-  CLICKED: 0,
-  OPENED: 1,
-  DELIVERED: 2,
-  SENT: 3,
-  PENDING: 4,
-  BOUNCED: 5,
-  COMPLAINED: 5,
-  UNSUBSCRIBED: 5,
-  FAILED: 5,
-};
-
 export async function POST(req: NextRequest) {
   const requiredSecret = process.env.EMAIL_WEBHOOK_SECRET;
+  if (!requiredSecret && process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Email webhook is not configured." }, { status: 503 });
+  }
   if (requiredSecret && req.headers.get("x-webhook-secret") !== requiredSecret) {
     return NextResponse.json({ error: "Invalid webhook secret." }, { status: 401 });
   }
@@ -91,8 +67,7 @@ export async function POST(req: NextRequest) {
     data: { recipientId: recipient.id, type: newStatus, occurredAt: eventTime, url },
   });
 
-  const shouldAdvanceStatus =
-    (ENGAGEMENT_RANK[newStatus] ?? 9) <= (ENGAGEMENT_RANK[recipient.status] ?? 9);
+  const shouldAdvanceStatus = shouldAdvanceEmailStatus(recipient.status, newStatus);
 
   await prisma.emailRecipient.update({
     where: { id: recipient.id },
@@ -111,6 +86,14 @@ export async function POST(req: NextRequest) {
       unsubscribedAt: type === "unsubscribed" ? eventTime : undefined,
     },
   });
+
+  if (["bounced", "complained", "unsubscribed"].includes(type)) {
+    await prisma.emailSuppression.upsert({
+      where: { email: recipient.email.toLowerCase() },
+      update: { reason: type.toUpperCase(), source: recipient.id },
+      create: { email: recipient.email.toLowerCase(), reason: type.toUpperCase(), source: recipient.id },
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

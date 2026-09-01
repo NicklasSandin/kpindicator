@@ -9,8 +9,9 @@ export default function TermsPage() {
       <SectionHeading eyebrow="Legal" title="Terms of Service" center={false} />
       <div className="mx-auto mt-10 max-w-2xl space-y-6 text-sm leading-relaxed text-muted-foreground">
         <p className="rounded-lg border border-border bg-card p-4 text-foreground/90">
-          Placeholder terms for demo purposes. Have counsel review and finalize this before
-          taking real client engagements.
+          Effective August 30, 2026. These terms provide an operational baseline; each paid
+          engagement is also governed by its signed statement of work. Have qualified counsel
+          review them before accepting production clients.
         </p>
         <div>
           <h2 className="text-base font-semibold text-foreground">What we deliver</h2>
@@ -41,6 +42,23 @@ export default function TermsPage() {
           <p className="mt-2">
             Packages are billed upfront via Stripe. Refund eligibility, if any, is specified in
             your engagement agreement — this page is a summary, not the governing contract.
+          </p>
+        </div>
+        <div>
+          <h2 className="text-base font-semibold text-foreground">Acceptable use</h2>
+          <p className="mt-2">
+            You must have the right to use the audiences, domains, creative, and recipient data
+            supplied for a test. Campaigns may not be unlawful, deceptive, abusive, or unsolicited
+            consumer messaging. We may pause activity that creates legal, deliverability,
+            security, or reputational risk.
+          </p>
+        </div>
+        <div>
+          <h2 className="text-base font-semibold text-foreground">Accounts and confidentiality</h2>
+          <p className="mt-2">
+            You are responsible for protecting account credentials and reporting unauthorized
+            access. Each party will use confidential project information only to deliver or
+            receive the agreed service, subject to the engagement agreement.
           </p>
         </div>
         <div>

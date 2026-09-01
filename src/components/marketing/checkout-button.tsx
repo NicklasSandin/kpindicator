@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 import { Button } from "@/components/ui/button";
 import type { PackageId } from "@/content/packages";
@@ -29,6 +30,7 @@ export function CheckoutButton({
   const [loading, setLoading] = React.useState(false);
 
   async function handleClick() {
+    if (posthog.__loaded) posthog.capture("checkout_started", { package_id: packageId });
     setLoading(true);
 
     // A full-page navigation, not a fetch: the PHP checkout renders the order
@@ -48,6 +50,7 @@ export function CheckoutButton({
       const data = await res.json();
 
       if (res.ok && data.url) {
+        if (posthog.__loaded) posthog.capture("package_selected", { package_id: packageId });
         window.location.href = data.url;
         return;
       }

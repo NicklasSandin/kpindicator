@@ -1,18 +1,17 @@
-import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+
+import { getSessionUser } from "@/lib/auth";
 
 /**
- * Placeholder for real auth, same pattern as getCurrentUser() — the /admin
- * section is internal-only (KPIndicator's own team tracking their outbound
- * marketing), not something a client should ever reach. There's no
- * login/role gate wired up yet; swap this for a session + role==="ADMIN"
- * check when auth is added.
+ * Same pattern as getCurrentUser() — the /admin section is internal-only.
+ * Signed-out visitors go to /login; signed-in non-admins go to /dashboard
+ * rather than seeing an error, since a client landing here is a routing
+ * mistake, not an auth failure they need to act on.
  */
-const DEMO_ADMIN_EMAIL = "ops@kpindicator.co";
-
 export async function getCurrentAdmin() {
-  const admin = await prisma.user.findUnique({ where: { email: DEMO_ADMIN_EMAIL } });
-  if (!admin) {
-    throw new Error(`Demo admin not found. Run "npm run db:seed" to populate the database.`);
-  }
-  return admin;
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
+  if (!user.emailVerifiedAt) redirect("/verify-email");
+  if (user.role !== "ADMIN") redirect("/dashboard");
+  return user;
 }

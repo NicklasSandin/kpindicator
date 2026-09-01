@@ -100,9 +100,9 @@ above) — separate from every flow so far, which is about running a client's *o
 ```mermaid
 flowchart TD
     A["/admin/campaigns/new\nname, subject, recipient list pasted in"] --> B["POST /api/admin/email-campaigns\nEmailCampaign created, status: DRAFT\nEmailRecipient rows created, status: PENDING"]
-    B --> C{"Sent through\nan ESP yet?"}
-    C -- "Not yet — settings pending" --> D["Campaign sits as a draft,\nvisible on /admin but not sending"]
-    C -- "Yes, once an ESP is wired up" --> E["Provider sends the campaign\n(outside this app — see email-campaigns.md)"]
+    B --> C{"Admin reviewed preview\nand explicitly started send?"}
+    C -- "No" --> D["Campaign remains a draft\nno external message sent"]
+    C -- "Yes, SES configured" --> E["SES adapter sends up to 50 pending,\nnon-suppressed recipients"]
     E --> F["Provider webhook →\nPOST /api/webhooks/email\n(normalized event: sent/opened/clicked/bounced/...)"]
     F --> G["EmailRecipient status + rollup fields updated\n(monotonic — can't be downgraded by an\nout-of-order webhook)"]
     F --> H["EmailEvent row appended\n(full audit log)"]
@@ -110,6 +110,7 @@ flowchart TD
     H --> I
 ```
 
-Steps A and B are built and working today — you can create a campaign and track it before any
-ESP is wired up. Step E (actually sending) is the one piece deliberately left for once sending
-settings are provided.
+The full draft-to-send path is implemented. Without verified SES credentials, sender identity,
+physical address, and unsubscribe configuration, sending stays disabled. Provider delivery,
+bounce, and complaint reporting still requires the signed event adapter described in
+`email-campaigns.md`.
