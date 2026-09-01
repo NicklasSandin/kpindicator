@@ -27,17 +27,23 @@ step "Fetching $BRANCH"
 sudo -u "$OWNER" git -C "$APP" fetch --prune origin
 sudo -u "$OWNER" git -C "$APP" reset --hard "origin/$BRANCH"
 
+# Run a command as the service user, from the app directory, with a real HOME.
+# npx has no --prefix: given one it ignores it and resolves from the registry
+# instead, which would silently pull a different major of Prisma and point
+# `migrate deploy` at production with it. cd is the only reliable way.
+as_owner() { sudo -u "$OWNER" env HOME="/home/$OWNER" sh -c "cd '$APP' && $*"; }
+
 step "Installing dependencies"
-sudo -u "$OWNER" npm --prefix "$APP" ci --no-audit --no-fund
+as_owner "npm ci --no-audit --no-fund"
 
 step "Applying migrations and generating the Prisma client"
-sudo -u "$OWNER" npx --prefix "$APP" prisma migrate deploy
-sudo -u "$OWNER" npx --prefix "$APP" prisma generate
+as_owner "npx --no-install prisma migrate deploy"
+as_owner "npx --no-install prisma generate"
 
 step "Building the site"
 # NEXT_PUBLIC_* is inlined at build time, so the checkout URL has to be in
 # .env before this runs — a restart alone will not pick it up.
-sudo -u "$OWNER" npm --prefix "$APP" run build
+as_owner "npm run build"
 
 step "Permissioning the checkout secrets"
 # PHP-FPM runs as nginx here, not as the repo owner, so a 600 .env owned by
