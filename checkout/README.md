@@ -62,9 +62,16 @@ in its `settings` table rather than in `.env`:
 | `STRIPE_PUBLISHABLE_KEY` | Stripe dashboard → Developers → API keys. It cannot be derived from the secret key. |
 | `STRIPE_WEBHOOK_SECRET` | Stripe dashboard → Developers → Webhooks → your endpoint → signing secret. |
 
-> BrandSentryPro resolves its live key from `settings.stripe_secret` in the
-> database, not from `.env`. If the two have drifted, the database is the one
-> that is actually charging cards — check it before assuming `.env` is current.
+> **On the production host this does not work, and the failure is quiet.**
+> BrandSentryPro resolves its key from `settings.stripe_secret` in the database,
+> and the `.env` deployed there carries no Stripe key at all — only a local
+> tarball copy of that file ever had one. `STRIPE_ENV_FILE` still parses it
+> happily and simply finds nothing, so the checkout reports a missing secret
+> key. Set `STRIPE_SECRET_KEY` in `checkout/.env` directly instead, and accept
+> that rotating the key means editing this file too.
+>
+> `bin/connection-check.php` catches exactly this: it prints which file was
+> read and whether a key came out of it.
 
 When the secret key is a `sk_live_` key and `CHECKOUT_ENV` is not `production`,
 every page carries a warning bar. Real cards, real charges.

@@ -88,7 +88,12 @@ if (!is_string($app['webhook_secret']) || $app['webhook_secret'] === '') {
 }
 
 if ($app['orders'] === null) {
-    $missing[] = 'Local order recording is off (DATABASE_URL is unset, not SQLite, or not writable).';
+    $reason = match (true) {
+        $env->get('DATABASE_URL') === null => 'DATABASE_URL is not set',
+        !extension_loaded('pdo_pgsql') => 'ext-pdo_pgsql is not installed (dnf install php-pgsql)',
+        default => 'the database could not be opened — see the log line above',
+    };
+    $missing[] = 'Order recording is off: ' . $reason . '. Payments still work; orders just are not written.';
 }
 
 if ($missing === []) {
