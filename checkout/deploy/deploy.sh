@@ -45,33 +45,59 @@ step "Building the site"
 # .env before this runs — a restart alone will not pick it up.
 as_owner "npm run build"
 
-step "Permissioning the checkout secrets"
-# PHP-FPM runs as nginx here, not as the repo owner, so a 600 .env owned by
-# almalinux is unreadable to it — and the failure is silent: the checkout just
-# reports that payments are not configured. Owner edits, group reads, world
-# gets nothing.
-if [ -f "$APP/checkout/.env" ]; then
-    chown "$OWNER:nginx" "$APP/checkout/.env"
-    chmod 640 "$APP/checkout/.env"
-    echo "  checkout/.env -> $OWNER:nginx 640"
-else
+step "Checking the checkout config exists"
+if [ ! -f "$APP/checkout/.env" ]; then
     echo "  WARNING: checkout/.env does not exist — the checkout cannot take a payment."
     echo "           Copy checkout/.env.example and fill in the Stripe values."
 fi
 
-step "Checking the PHP checkout"
+step "Giving the checkout its own DATABASE_URL"
+# The site's .env is 600 and owned by the repo user, so the nginx user PHP-FPM
+# runs as cannot read it — DATABASE_URL simply looks unset and orders silently
+# stop being recorded. Copy that one line across rather than loosening the
+# site's .env, which also holds SES keys and OAuth secrets the checkout has no
+# business reading.
+if [ -f "$APP/checkout/.env" ] && ! grep -q '^DATABASE_URL' "$APP/checkout/.env"; then
+    if grep -q '^DATABASE_URL' "$APP/.env"; then
+        grep '^DATABASE_URL' "$APP/.env" >> "$APP/checkout/.env"
+        echo "  copied DATABASE_URL from the site .env"
+    else
+        echo "  WARNING: no DATABASE_URL in $APP/.env — orders will not be recorded."
+    fi
+else
+    echo "  already present"
+fi
+
+step "Installing the PostgreSQL driver"
 if ! php -m | grep -qi pdo_pgsql; then
     echo "  pdo_pgsql missing — installing"
     dnf install -y php-pgsql
     systemctl restart php-fpm
+else
+    echo "  already installed"
 fi
-# Run as nginx, not as the repo owner: the point is to prove the user PHP-FPM
-# actually runs as can read the config, not that root can.
-sudo -u nginx php "$APP/checkout/bin/connection-check.php"
+
+step "Permissioning the checkout secrets"
+# Re-applied after the DATABASE_URL append above, which is written by the repo
+# user and would otherwise leave the mode where umask put it.
+chown "$OWNER:nginx" "$APP/checkout/.env" 2>/dev/null || true
+chmod 640 "$APP/checkout/.env" 2>/dev/null || true
+echo "  checkout/.env -> $OWNER:nginx 640"
 
 step "Restarting services"
+# Before the connection check, not after. The check exits non-zero when
+# anything is still unconfigured, and under `set -e` that used to abort the
+# deploy here — leaving the new build sitting on disk while the old one kept
+# serving.
 systemctl restart kpindicator.com.service
 nginx -t && systemctl reload nginx
+
+step "Checking the PHP checkout"
+# Run as nginx, not as the repo owner: the point is to prove the user PHP-FPM
+# actually runs as can read the config. Non-fatal — the deploy is already done
+# by this point, so this reports rather than gates.
+sudo -u nginx php "$APP/checkout/bin/connection-check.php" || \
+    echo "  ^ deploy completed, but the checkout is not fully configured (see above)"
 
 step "Done"
 systemctl --no-pager --lines=0 status kpindicator.com.service | head -3
