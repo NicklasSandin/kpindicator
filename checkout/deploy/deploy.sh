@@ -68,6 +68,13 @@ else
     echo "  already present"
 fi
 
+step "Creating the session directory"
+# The system session.save_path on this distro is owned root:apache while the
+# pool runs as nginx, so PHP silently fails to persist sessions and every CSRF
+# check fails. The app keeps its own instead.
+install -d -o nginx -g nginx -m 770 "$APP/checkout/storage/sessions"
+echo "  checkout/storage/sessions -> nginx:nginx 770"
+
 step "Installing the PostgreSQL driver"
 if ! php -m | grep -qi pdo_pgsql; then
     echo "  pdo_pgsql missing — installing"

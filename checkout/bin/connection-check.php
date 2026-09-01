@@ -31,6 +31,9 @@ $line = static fn (string $label, string $value): string => sprintf("  %-16s %s\
 
 echo "\nKPIndicator checkout — connection check\n\n";
 
+$session = Http::sessionsWork();
+echo $line('sessions', ($session['ok'] ? 'OK' : 'BROKEN') . '  ' . $session['path'] . '  (' . $session['detail'] . ')');
+
 $sharedFile = $env->get('STRIPE_ENV_FILE');
 echo $line('env file', $sharedFile ?? '(none — using checkout/.env and the repo .env)');
 
@@ -76,6 +79,13 @@ try {
 echo "\n";
 
 $missing = [];
+
+if (!$session['ok']) {
+    $missing[] = 'Sessions cannot be written, so every CSRF check fails and the checkout '
+        . 'cannot create a payment. Nothing else reports this — the page just says the '
+        . 'session expired. Fix the directory above, or let the app use its own: '
+        . 'mkdir -p checkout/storage/sessions && chown nginx:nginx checkout/storage/sessions';
+}
 
 if ($app['publishable_key'] === null) {
     $missing[] = 'STRIPE_PUBLISHABLE_KEY — dashboard > Developers > API keys.'

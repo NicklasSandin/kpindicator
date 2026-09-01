@@ -123,6 +123,19 @@ final class Http
         $https = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
             || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
 
+        // Keep sessions inside the app rather than trusting the system path.
+        //
+        // On RHEL-family hosts session.save_path is /var/lib/php/session, owned
+        // root:apache — because the php-fpm package is built for Apache. A pool
+        // running as nginx cannot write there, and PHP does not complain: every
+        // request just gets a fresh empty session. The only symptom is that
+        // CSRF checks start failing, which is what took this checkout down on
+        // its first live page load.
+        $sessions = self::sessionPath();
+        if ($sessions !== null) {
+            ini_set('session.save_path', $sessions);
+        }
+
         session_name(self::SESSION_NAME);
         session_set_cookie_params([
             'lifetime' => 0,
@@ -132,6 +145,48 @@ final class Http
             'secure' => $https,
         ]);
         session_start();
+    }
+
+    /**
+     * The app's own session directory, created on demand.
+     *
+     * Returns null if it cannot be made writable, in which case PHP falls back
+     * to the system path — which may or may not work, and sessionsWork() is
+     * what actually tells you.
+     */
+    public static function sessionPath(): ?string
+    {
+        $path = dirname(__DIR__) . '/storage/sessions';
+
+        if (!is_dir($path) && !@mkdir($path, 0770, true) && !is_dir($path)) {
+            return null;
+        }
+
+        return is_writable($path) ? $path : null;
+    }
+
+    /**
+     * Prove a session actually survives a write — the check that would have
+     * caught the save_path ownership problem before a buyer did.
+     *
+     * @return array{ok:bool, path:string, detail:string}
+     */
+    public static function sessionsWork(): array
+    {
+        $path = self::sessionPath() ?? (string) ini_get('session.save_path');
+        $path = $path !== '' ? $path : sys_get_temp_dir();
+
+        if (!is_dir($path)) {
+            return ['ok' => false, 'path' => $path, 'detail' => 'directory does not exist'];
+        }
+
+        if (!is_writable($path)) {
+            return ['ok' => false, 'path' => $path, 'detail' => 'not writable by ' . (function_exists('posix_getpwuid') && function_exists('posix_geteuid')
+                ? (posix_getpwuid(posix_geteuid())['name'] ?? 'this user')
+                : 'this user')];
+        }
+
+        return ['ok' => true, 'path' => $path, 'detail' => 'writable'];
     }
 
     public static function csrfToken(): string

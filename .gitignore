@@ -50,3 +50,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# The PHP checkout writes its own sessions here — see checkout/src/Http.php
+/checkout/storage/
