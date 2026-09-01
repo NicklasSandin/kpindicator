@@ -14,13 +14,29 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 enum Role {
   CLIENT
   ADMIN
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// How a self-registered user describes their relationship to KPIndicator.
+// Orthogonal to Role (which is about permissions, not intent) — set once,
+// right after signup, via the onboarding picker. Null until then.
+enum Audience {
+  STARTUP
+  INVESTOR
+  EXPLORER
 }
 
 enum PackageType {
@@ -84,6 +100,7 @@ enum EmailCampaignStatus {
   SENDING
   SENT
   PAUSED
+  FAILED
 }
 
 enum EmailRecipientStatus {
@@ -110,21 +127,124 @@ enum EmailEventType {
 }
 
 model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String
+  // Nullable: seeded demo users predate password auth and have no login of
+  // their own. Real signups always set this at creation time.
+  passwordHash    String?
+  role            Role      @default(CLIENT)
+  // Set right after signup via the onboarding picker; null until then.
+  audience        Audience?
+  company         String?
+  createdAt       DateTime  @default(now())
+  emailVerifiedAt DateTime?
+
+  memberships        OrganizationMember[]
+  sessions           Session[]
+  verificationTokens EmailVerificationToken[]
+  oauthAccounts      OAuthAccount[]
+}
+
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  provider          String
+  providerAccountId String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
+  @@index([userId])
+}
+
+model EmailVerificationToken {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  role      Role     @default(CLIENT)
-  company   String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
   createdAt DateTime @default(now())
 
-  projects Project[]
-  orders   Order[]
+  @@index([userId])
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     OrganizationMember[]
+  invitations OrganizationInvitation[]
+  projects    Project[]
+  orders      Order[]
+  auditLogs   OrganizationAuditLog[]
+}
+
+model OrganizationMember {
+  id             String           @id @default(cuid())
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  role           OrganizationRole @default(MEMBER)
+  createdAt      DateTime         @default(now())
+  projectAccess  ProjectAccess[]
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model OrganizationAuditLog {
+  id             String       @id @default(cuid())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  actorId        String?
+  actorName      String
+  action         String
+  target         String?
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
+}
+
+model OrganizationInvitation {
+  id             String           @id @default(cuid())
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  email          String
+  role           OrganizationRole @default(MEMBER)
+  tokenHash      String           @unique
+  invitedById    String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@index([organizationId])
+  @@index([email])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  // sha256 of the bearer token that goes in the session cookie — the raw
+  // token is never persisted, so a DB leak alone can't be replayed.
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Project {
   id                 String        @id @default(cuid())
-  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId             String
+  organization       Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId     String
   name               String
   package            PackageType
   status             ProjectStatus @default(INTAKE)
@@ -133,11 +253,25 @@ model Project {
   targetCompleteDate DateTime?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
+  restricted         Boolean       @default(false)
 
-  ideas   Idea[]
-  reports Report[]
+  ideas        Idea[]
+  reports      Report[]
+  memberAccess ProjectAccess[]
 
-  @@index([userId])
+  @@index([organizationId])
+}
+
+model ProjectAccess {
+  id        String             @id @default(cuid())
+  project   Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  member    OrganizationMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId  String
+  createdAt DateTime           @default(now())
+
+  @@unique([projectId, memberId])
+  @@index([memberId])
 }
 
 model Idea {
@@ -177,26 +311,26 @@ model Campaign {
 }
 
 model MetricSnapshot {
-  id          String   @id @default(cuid())
-  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  campaignId  String
-  date        DateTime
-  visitors    Int      @default(0)
-  leads       Int      @default(0)
-  signups     Int      @default(0)
-  preorders   Int      @default(0)
-  spendCents  Int      @default(0)
-  notes       String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+  date       DateTime
+  visitors   Int      @default(0)
+  leads      Int      @default(0)
+  signups    Int      @default(0)
+  preorders  Int      @default(0)
+  spendCents Int      @default(0)
+  notes      String?
+  createdAt  DateTime @default(now())
 
   @@index([campaignId])
 }
 
 model Report {
-  id             String          @id @default(cuid())
-  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id             String         @id @default(cuid())
+  project        Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId      String
-  idea           Idea?           @relation(fields: [ideaId], references: [id], onDelete: SetNull)
+  idea           Idea?          @relation(fields: [ideaId], references: [id], onDelete: SetNull)
   ideaId         String?
   title          String
   recommendation Recommendation
@@ -204,34 +338,42 @@ model Report {
   body           String
   fileUrl        String?
   publishedAt    DateTime?
-  createdAt      DateTime        @default(now())
+  createdAt      DateTime       @default(now())
 
   @@index([projectId])
 }
 
 model ContactSubmission {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  company   String?
-  interest  String?
-  message   String
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  name           String
+  email          String
+  company        String?
+  interest       String?
+  message        String
+  currentStage   String?
+  targetCustomer String?
+  priorTests     String?
+  budget         String?
+  timeline       String?
+  status         String   @default("NEW")
+  createdAt      DateTime @default(now())
+
+  @@index([status, createdAt])
 }
 
 model Order {
-  id                     String      @id @default(cuid())
-  user                   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId                 String
-  package                PackageType
-  amountCents            Int
-  currency               String      @default("usd")
-  stripeSessionId        String?     @unique
-  stripePaymentIntentId  String?
-  status                 OrderStatus @default(PENDING)
-  createdAt              DateTime    @default(now())
+  id                    String       @id @default(cuid())
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId        String
+  package               PackageType
+  amountCents           Int
+  currency              String       @default("usd")
+  stripeSessionId       String?      @unique
+  stripePaymentIntentId String?
+  status                OrderStatus  @default(PENDING)
+  createdAt             DateTime     @default(now())
 
-  @@index([userId])
+  @@index([organizationId])
 }
 
 // --- Outbound marketing email tracking -------------------------------
@@ -243,43 +385,57 @@ model Order {
 // chosen.
 
 model EmailCampaign {
-  id           String              @id @default(cuid())
-  name         String
-  subject      String
-  previewText  String?
-  fromName     String?
-  fromEmail    String?
-  audience     String?
-  status       EmailCampaignStatus @default(DRAFT)
-  scheduledAt  DateTime?
-  sentAt       DateTime?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  id          String              @id @default(cuid())
+  name        String
+  subject     String
+  previewText String?
+  fromName    String?
+  fromEmail   String?
+  audience    String?
+  bodyText    String              @default("")
+  bodyHtml    String?
+  templateKey String?
+  status      EmailCampaignStatus @default(DRAFT)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 
   recipients EmailRecipient[]
 }
 
+model EmailSuppression {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  reason    String
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reason])
+}
+
 model EmailRecipient {
-  id              String                @id @default(cuid())
-  campaign        EmailCampaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  campaignId      String
-  email           String
-  name            String?
-  company         String?
-  status          EmailRecipientStatus  @default(PENDING)
-  externalId      String?
-  sentAt          DateTime?
-  deliveredAt     DateTime?
-  firstOpenedAt   DateTime?
-  lastOpenedAt    DateTime?
-  openCount       Int                   @default(0)
-  firstClickedAt  DateTime?
-  lastClickedAt   DateTime?
-  clickCount      Int                   @default(0)
-  bouncedAt       DateTime?
-  bounceReason    String?
-  unsubscribedAt  DateTime?
-  createdAt       DateTime              @default(now())
+  id             String               @id @default(cuid())
+  campaign       EmailCampaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId     String
+  email          String
+  name           String?
+  company        String?
+  status         EmailRecipientStatus @default(PENDING)
+  externalId     String?
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  firstOpenedAt  DateTime?
+  lastOpenedAt   DateTime?
+  openCount      Int                  @default(0)
+  firstClickedAt DateTime?
+  lastClickedAt  DateTime?
+  clickCount     Int                  @default(0)
+  bouncedAt      DateTime?
+  bounceReason   String?
+  unsubscribedAt DateTime?
+  createdAt      DateTime             @default(now())
 
   events EmailEvent[]
 
@@ -288,14 +444,14 @@ model EmailRecipient {
 }
 
 model EmailEvent {
-  id          String          @id @default(cuid())
-  recipient   EmailRecipient  @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  id          String         @id @default(cuid())
+  recipient   EmailRecipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
   recipientId String
   type        EmailEventType
   occurredAt  DateTime
   url         String?
   meta        String?
-  createdAt   DateTime        @default(now())
+  createdAt   DateTime       @default(now())
 
   @@index([recipientId])
 }

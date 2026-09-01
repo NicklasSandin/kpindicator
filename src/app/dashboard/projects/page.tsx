@@ -3,28 +3,35 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentOrganization, visibleProjectWhere } from "@/lib/organization";
 import { formatDate } from "@/lib/format";
 import { PACKAGES } from "@/content/packages";
 import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
+import { AudienceSwitcher } from "@/components/dashboard/audience-switcher";
 
 export const metadata: Metadata = { title: "Projects" };
 
 export default async function ProjectsPage() {
-  const user = await getCurrentUser();
+  const context = await getCurrentOrganization();
+  const { user } = context;
   const projects = await prisma.project.findMany({
-    where: { userId: user.id },
+    where: visibleProjectWhere(context),
     include: { ideas: true, reports: true },
     orderBy: { createdAt: "desc" },
   });
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="text-2xl font-semibold text-foreground">Projects</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Every package you&apos;ve purchased, from intake through final report.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Projects</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Every package you&apos;ve purchased, from intake through final report.
+          </p>
+        </div>
+        <AudienceSwitcher initialAudience={user.audience} />
+      </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {projects.map((project) => {

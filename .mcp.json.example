@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "postgres": {
+      "command": "uvx",
+      "args": [
+        "--with", "mcp<2",
+        "postgres-mcp",
+        "--access-mode=restricted",
+        "postgresql://<readonly-user>:<password>@127.0.0.1:5432/kpindicator_prod"
+      ]
+    },
+    "github": {
+      "command": "/usr/local/bin/github-mcp-server",
+      "args": ["stdio"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "<github-pat-with-repo-scope>"
+      }
+    },
+    "stripe": {
+      "type": "http",
+      "url": "https://mcp.stripe.com",
+      "headers": {
+        "Authorization": "Bearer <stripe-secret-key>"
+      }
+    }
+  }
+}

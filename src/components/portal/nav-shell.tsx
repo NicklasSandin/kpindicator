@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ArrowLeft, Menu, type LucideIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ArrowLeft, LogOut, Menu, type LucideIcon } from "lucide-react";
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,22 @@ function NavLink({ item, active }: { item: PortalNavItem; active: boolean }) {
   );
 }
 
+function LogoutButton() {
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/");
+    router.refresh();
+  }
+
+  return (
+    <Button variant="ghost" size="icon" aria-label="Log out" onClick={handleLogout}>
+      <LogOut className="size-4" />
+    </Button>
+  );
+}
+
 export function PortalSidebar({
   items,
   userName,
@@ -89,7 +105,10 @@ export function PortalSidebar({
               <p className="truncate text-xs text-muted-foreground">{userSubtitle}</p>
             )}
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <LogoutButton />
+          </div>
         </div>
       </div>
     </aside>
@@ -112,6 +131,7 @@ export function PortalMobileHeader({
       <Logo />
       <div className="flex items-center gap-1">
         <ThemeToggle />
+        <LogoutButton />
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" aria-label="Open menu">

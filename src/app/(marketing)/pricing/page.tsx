@@ -10,6 +10,7 @@ import { FAQAccordion } from "@/components/marketing/faq-accordion";
 import { CTASection } from "@/components/marketing/cta-section";
 import { Badge } from "@/components/ui/badge";
 import { FAQS } from "@/content/faqs";
+import { AnalyticsEvent } from "@/components/analytics-event";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -23,6 +24,7 @@ export default function PricingPage() {
   return (
     <>
       <JsonLd schema={serviceSchemas()} />
+      <AnalyticsEvent event="pricing_viewed" />
       <Section border={false} className="pb-8">
         <div className="mx-auto mb-5 max-w-2xl text-center">
           <Badge variant="secondary" className="gap-1.5 px-3 py-1 text-xs font-medium">

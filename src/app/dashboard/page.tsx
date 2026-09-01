@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight, FileText, FolderKanban, Lightbulb, Target } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentOrganization, visibleProjectWhere } from "@/lib/organization";
 import { sumMetrics } from "@/lib/metrics";
 import { formatDate, formatNumber } from "@/lib/format";
 import { PACKAGES } from "@/content/packages";
@@ -14,10 +14,11 @@ import { Badge } from "@/components/ui/badge";
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardOverviewPage() {
-  const user = await getCurrentUser();
+  const context = await getCurrentOrganization();
+  const { user } = context;
 
   const projects = await prisma.project.findMany({
-    where: { userId: user.id },
+    where: visibleProjectWhere(context),
     include: {
       ideas: { include: { campaigns: { include: { metrics: true } } } },
       reports: true,

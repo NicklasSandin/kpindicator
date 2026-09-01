@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, FileText } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentOrganization, visibleProjectWhere } from "@/lib/organization";
 import { sumMetrics } from "@/lib/metrics";
 import { formatCents, formatDate, formatNumber, formatPercent } from "@/lib/format";
 import { PACKAGES } from "@/content/packages";
@@ -12,14 +12,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
-  const project = await prisma.project.findUnique({ where: { id } });
-  return { title: project?.name ?? "Project" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: "Project" };
 }
 
 export default async function ProjectDetailPage({
@@ -28,10 +22,10 @@ export default async function ProjectDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await getCurrentUser();
+  const context = await getCurrentOrganization();
 
   const project = await prisma.project.findFirst({
-    where: { id, userId: user.id },
+    where: { id, ...visibleProjectWhere(context) },
     include: {
       ideas: {
         orderBy: { priorityRank: "asc" },
@@ -76,10 +70,12 @@ export default async function ProjectDetailPage({
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
         <MetricCard label="Visitors" value={formatNumber(totals.visitors)} />
         <MetricCard label="Leads" value={formatNumber(totals.leads)} />
         <MetricCard label="Conversion rate" value={formatPercent(totals.conversionRate)} />
+        <MetricCard label="Qualified actions" value={formatNumber(totals.signups)} detail="Signups or booked next steps" />
+        <MetricCard label="Deposits / preorders" value={formatNumber(totals.preorders)} detail="Strongest intent signal" />
         <MetricCard
           label="Media spend"
           value={formatCents(totals.spendCents)}
@@ -122,7 +118,7 @@ export default async function ProjectDetailPage({
                   )}
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 sm:grid-cols-4">
+                <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 sm:grid-cols-5">
                   <div>
                     <p className="text-xs text-muted-foreground">Visitors</p>
                     <p className="mt-0.5 text-sm font-semibold text-foreground">
@@ -141,12 +137,8 @@ export default async function ProjectDetailPage({
                       {formatPercent(ideaTotals.conversionRate)}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Campaigns</p>
-                    <p className="mt-0.5 text-sm font-semibold text-foreground">
-                      {idea.campaigns.length}
-                    </p>
-                  </div>
+                  <div><p className="text-xs text-muted-foreground">Qualified actions</p><p className="mt-0.5 text-sm font-semibold text-foreground">{formatNumber(ideaTotals.signups)}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Deposits / preorders</p><p className="mt-0.5 text-sm font-semibold text-foreground">{formatNumber(ideaTotals.preorders)}</p></div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-1.5">

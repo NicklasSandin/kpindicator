@@ -18,7 +18,7 @@ import { FAQS } from "@/content/faqs";
 export const metadata: Metadata = {
   title: "Validate an Idea",
   description:
-    "KPIndicator runs real traffic against your 3-5 best ideas, measures what actually converts, and hands you a clear go/no-go — then builds the one that hits.",
+    "KPIndicator tests real offers with real prospects and gives you a clear go, pivot, or no-go recommendation before you fund the build.",
 };
 
 export default function ValidatePage() {

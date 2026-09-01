@@ -37,6 +37,9 @@ yarn-error.log*
 !.env.example
 !**/.env.example
 
+# MCP config holds live credentials (DB password, GitHub PAT, Stripe key) — see .mcp.json.example
+/.mcp.json
+
 # vercel
 .vercel
 

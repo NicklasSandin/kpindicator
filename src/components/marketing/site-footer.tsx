@@ -3,12 +3,11 @@ import { Logo } from "@/components/logo";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   {
-    title: "Services",
+    title: "Validation",
     links: [
-      { href: "/validate", label: "Validate an idea" },
-      { href: "/grow", label: "Grow a product" },
-      { href: "/incorporate", label: "Company formation" },
+      { href: "/process", label: "How it works" },
       { href: "/pricing", label: "Pricing" },
+      { href: "/contact?interest=idea-review", label: "Request an idea review" },
     ],
   },
   {
@@ -38,7 +37,7 @@ export function SiteFooter() {
           <div className="col-span-2 sm:col-span-1">
             <Logo />
             <p className="mt-3 max-w-52 text-sm text-muted-foreground">
-              Know before you spend — on the idea, the growth, or the paperwork.
+              Know which idea customers want before you build it.
             </p>
           </div>
           {COLUMNS.map((col) => (
@@ -63,7 +62,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; {new Date().getFullYear()} KPIndicator. All rights reserved.</p>
-          <p>Real traffic. Real reports. No hedging.</p>
+          <p>Real behavior. Clear thresholds. An honest recommendation.</p>
         </div>
       </div>
     </footer>
