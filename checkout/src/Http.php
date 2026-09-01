@@ -180,13 +180,32 @@ final class Http
             return ['ok' => false, 'path' => $path, 'detail' => 'directory does not exist'];
         }
 
+        $user = function_exists('posix_getpwuid') && function_exists('posix_geteuid')
+            ? (posix_getpwuid(posix_geteuid())['name'] ?? 'this user')
+            : 'this user';
+
         if (!is_writable($path)) {
-            return ['ok' => false, 'path' => $path, 'detail' => 'not writable by ' . (function_exists('posix_getpwuid') && function_exists('posix_geteuid')
-                ? (posix_getpwuid(posix_geteuid())['name'] ?? 'this user')
-                : 'this user')];
+            return ['ok' => false, 'path' => $path, 'detail' => 'not writable by ' . $user];
         }
 
-        return ['ok' => true, 'path' => $path, 'detail' => 'writable'];
+        // is_writable() only consults the Unix permission bits. SELinux sits
+        // underneath those and denies silently, which is exactly how a
+        // correctly-chowned session directory can still swallow every write —
+        // so prove it by writing.
+        $probe = $path . '/.probe-' . bin2hex(random_bytes(4));
+
+        if (@file_put_contents($probe, 'probe') === false) {
+            $hint = trim((string) @shell_exec('getenforce 2>/dev/null')) === 'Enforcing'
+                ? 'permissions look right but the write failed — SELinux is Enforcing, so check the file context '
+                    . '(restorecon -Rv, or semanage fcontext -a -t httpd_sys_rw_content_t)'
+                : 'permissions look right but the write failed';
+
+            return ['ok' => false, 'path' => $path, 'detail' => $hint];
+        }
+
+        @unlink($probe);
+
+        return ['ok' => true, 'path' => $path, 'detail' => 'verified by writing as ' . $user];
     }
 
     public static function csrfToken(): string

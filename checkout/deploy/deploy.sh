@@ -75,6 +75,21 @@ step "Creating the session directory"
 install -d -o nginx -g nginx -m 770 "$APP/checkout/storage/sessions"
 echo "  checkout/storage/sessions -> nginx:nginx 770"
 
+# Ownership is not enough under SELinux. Anything under /var/www inherits
+# httpd_sys_content_t, which is read-only to the web server: PHP-FPM's writes
+# are denied at the kernel level, no error surfaces, and sessions vanish.
+if [ "$(getenforce 2>/dev/null)" = "Enforcing" ]; then
+    if command -v semanage >/dev/null 2>&1; then
+        semanage fcontext -a -t httpd_sys_rw_content_t "$APP/checkout/storage(/.*)?" 2>/dev/null || true
+        restorecon -R "$APP/checkout/storage"
+        echo "  SELinux: storage labelled httpd_sys_rw_content_t (persistent)"
+    else
+        chcon -R -t httpd_sys_rw_content_t "$APP/checkout/storage"
+        echo "  SELinux: storage relabelled with chcon"
+        echo "           (install policycoreutils-python-utils for a label that survives a relabel)"
+    fi
+fi
+
 step "Installing the PostgreSQL driver"
 if ! php -m | grep -qi pdo_pgsql; then
     echo "  pdo_pgsql missing — installing"
