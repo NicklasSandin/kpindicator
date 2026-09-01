@@ -41,8 +41,21 @@ as_owner "npx --no-install prisma migrate deploy"
 as_owner "npx --no-install prisma generate"
 
 step "Building the site"
-# NEXT_PUBLIC_* is inlined at build time, so the checkout URL has to be in
-# .env before this runs — a restart alone will not pick it up.
+# NEXT_PUBLIC_* is inlined into the client bundle at build time, so those values
+# have to be in .env before this runs — a restart alone will not pick them up.
+#
+# And a rebuild alone is not always enough either: webpack's cache does not
+# invalidate when only .env changed, so it reuses the module compiled while the
+# variable was absent and leaves `process.env.X` as a runtime lookup, which is
+# undefined in the browser. The build succeeds, the value is sitting in .env,
+# and the feature is simply dead — which is exactly how PostHog appeared to be
+# configured while capturing nothing. Clearing the cache is the only reliable
+# fix, so do it whenever .env is newer than the last build.
+if [ ! -f "$APP/.next/BUILD_ID" ] || [ "$APP/.env" -nt "$APP/.next/BUILD_ID" ]; then
+    echo "  .env is newer than the last build — clearing the webpack cache"
+    rm -rf "$APP/.next/cache"
+fi
+
 as_owner "npm run build"
 
 step "Checking the checkout config exists"
