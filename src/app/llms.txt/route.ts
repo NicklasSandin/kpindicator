@@ -57,7 +57,7 @@ ${packages}
 - [Homepage](${abs("/")}): The three tracks — validate an idea, grow a live product, or incorporate.
 - [Validate an idea](${abs("/validate")}): Demand testing for an unbuilt idea. The main entry point.
 - [Grow a product](${abs("/grow")}): Testing positioning, pricing, features, and channels for something already live.
-- [Incorporate](${abs("/incorporate")}): Entity formation, banking, and compliance for a validated idea.
+- [Incorporate](${abs("/incorporate")}): Company registration, banking, and compliance for a validated idea.
 - [Pricing](${abs("/pricing")}): All four packages with prices, inclusions, and where the line sits between them.
 - [Process](${abs("/process")}): How an engagement actually runs, step by step.
 - [About](${abs("/about")}): Who KPIndicator is for, and explicitly who it is not for.

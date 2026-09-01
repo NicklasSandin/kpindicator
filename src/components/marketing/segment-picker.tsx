@@ -16,7 +16,7 @@ const SEGMENTS = [
     index: "02",
     title: "I have a live product",
     description:
-      "Test new positioning, features, channels, or pricing against real traffic before you bet a quarter on the wrong one.",
+      "Test new positioning, features, channels, or pricing against real traffic before you spend three months on the wrong one.",
     price: "From $995",
   },
   {
@@ -24,7 +24,7 @@ const SEGMENTS = [
     index: "03",
     title: "I need a company",
     description:
-      "Entity formation, banking, and compliance handled so a validated idea doesn't stall on paperwork.",
+      "We register the company, open the banking, and handle compliance, so a validated idea doesn't stall on paperwork.",
     price: "Book a call",
   },
 ] as const;

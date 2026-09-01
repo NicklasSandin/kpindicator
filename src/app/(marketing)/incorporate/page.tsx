@@ -12,7 +12,7 @@ import { INCORPORATE_PACKAGES, INCORPORATE_FOR_YOU, INCORPORATE_FAQS } from "@/c
 export const metadata: Metadata = {
   title: "Company Formation",
   description:
-    "Entity formation, banking setup, and compliance handled so a validated idea doesn't stall on paperwork — a service line alongside KPIndicator's validation and growth work.",
+    "Company registration, banking setup, and compliance handled so a validated idea doesn't stall on paperwork — a service line alongside KPIndicator's validation and growth work.",
 };
 
 export default function IncorporatePage() {
@@ -38,7 +38,7 @@ export default function IncorporatePage() {
         <SectionHeading
           eyebrow="Incorporate"
           title="Need a company before you can take the money?"
-          description="We handle entity formation, banking, and compliance so a validated idea — or a business you're already running — doesn't stall on paperwork."
+          description="We register the company, open the banking, and handle compliance so a validated idea — or a business you're already running — doesn't stall on paperwork."
         />
       </Section>
 

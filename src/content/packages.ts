@@ -36,7 +36,7 @@ export const PACKAGES: PackageDef[] = [
     includes: [
       "Competitor research (direct + adjacent)",
       "Target market sizing and analysis",
-      "Pricing analysis and positioning gap map",
+      "Pricing analysis, and where the gap in the market is",
       "Written go / no-go assessment with reasoning",
     ],
     deliverables: [
@@ -107,9 +107,9 @@ export const PACKAGES: PackageDef[] = [
     duration: "4-6 weeks",
     bestFor: "A validated idea you're about to greenlight for build, and want investor- or board-grade proof first.",
     includes: [
-      "Full demand-gen campaign across paid, email, and outreach",
+      "A full campaign to create demand — paid ads, email, and direct outreach",
       "Booked demo or deposit-collection flow",
-      "Conditional preorder mechanics (refundable deposits)",
+      "Refundable deposits, so interest is backed by money",
       "Sales-assisted follow-up on high-intent leads",
       "Presale results report with revenue committed",
     ],

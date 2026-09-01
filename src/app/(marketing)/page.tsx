@@ -23,7 +23,7 @@ export default function HomePage() {
               >
                 <span className="text-signal-ink tnum">00</span>
                 <span aria-hidden className="text-border">—</span>
-                <span>Done-for-you, from idea to entity</span>
+                <span>Done for you — from first idea to registered company</span>
               </p>
 
               <h1
@@ -41,9 +41,10 @@ export default function HomePage() {
                 className="rise mt-9 measure text-lede text-muted-foreground"
                 style={{ "--i": 3 } as React.CSSProperties}
               >
-                We run real tests against real traffic so you don&apos;t guess —
-                whether you&apos;re validating a new idea, growing something you
-                already built, or need the legal entity to actually take money for it.
+                We build a real landing page for your idea, buy real traffic to it,
+                and show you what people actually did — clicked, signed up, paid.
+                Then we tell you whether to build it. Same for a product you already
+                have, and we can set up the company too.
               </p>
             </div>
 
