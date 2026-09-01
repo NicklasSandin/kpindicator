@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { EVENT_TO_STATUS, shouldAdvanceEmailStatus } from "@/lib/email-events";
+import { recordEmailEvent } from "@/lib/email-ingest";
 
 /**
  * Generic, provider-agnostic ingestion endpoint for outbound email engagement
@@ -50,49 +49,19 @@ export async function POST(req: NextRequest) {
   }
 
   const { type, email, campaignId, recipientId, occurredAt, url, reason } = parsed.data;
-  const eventTime = occurredAt ? new Date(occurredAt) : new Date();
-  const newStatus = EVENT_TO_STATUS[type];
 
-  const recipient = recipientId
-    ? await prisma.emailRecipient.findUnique({ where: { id: recipientId } })
-    : campaignId
-      ? await prisma.emailRecipient.findUnique({ where: { campaignId_email: { campaignId, email } } })
-      : await prisma.emailRecipient.findFirst({ where: { email }, orderBy: { createdAt: "desc" } });
+  const result = await recordEmailEvent({
+    type,
+    email,
+    campaignId,
+    recipientId,
+    occurredAt: occurredAt ? new Date(occurredAt) : undefined,
+    url,
+    reason,
+  });
 
-  if (!recipient) {
+  if (!result.ok) {
     return NextResponse.json({ error: "No matching recipient found." }, { status: 404 });
-  }
-
-  await prisma.emailEvent.create({
-    data: { recipientId: recipient.id, type: newStatus, occurredAt: eventTime, url },
-  });
-
-  const shouldAdvanceStatus = shouldAdvanceEmailStatus(recipient.status, newStatus);
-
-  await prisma.emailRecipient.update({
-    where: { id: recipient.id },
-    data: {
-      status: shouldAdvanceStatus ? newStatus : undefined,
-      sentAt: type === "sent" ? (recipient.sentAt ?? eventTime) : undefined,
-      deliveredAt: type === "delivered" ? (recipient.deliveredAt ?? eventTime) : undefined,
-      firstOpenedAt: type === "opened" ? (recipient.firstOpenedAt ?? eventTime) : undefined,
-      lastOpenedAt: type === "opened" ? eventTime : undefined,
-      openCount: type === "opened" ? { increment: 1 } : undefined,
-      firstClickedAt: type === "clicked" ? (recipient.firstClickedAt ?? eventTime) : undefined,
-      lastClickedAt: type === "clicked" ? eventTime : undefined,
-      clickCount: type === "clicked" ? { increment: 1 } : undefined,
-      bouncedAt: type === "bounced" ? eventTime : undefined,
-      bounceReason: type === "bounced" ? reason : undefined,
-      unsubscribedAt: type === "unsubscribed" ? eventTime : undefined,
-    },
-  });
-
-  if (["bounced", "complained", "unsubscribed"].includes(type)) {
-    await prisma.emailSuppression.upsert({
-      where: { email: recipient.email.toLowerCase() },
-      update: { reason: type.toUpperCase(), source: recipient.id },
-      create: { email: recipient.email.toLowerCase(), reason: type.toUpperCase(), source: recipient.id },
-    });
   }
 
   return NextResponse.json({ ok: true });
