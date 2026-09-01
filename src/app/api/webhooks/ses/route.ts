@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { recordEmailEvent } from "@/lib/email-ingest";
 import { sesEventToNormalized } from "@/lib/ses-events";
-import { isAwsSigningUrl, verifySnsSignature, type SnsEnvelope } from "@/lib/sns-signature";
+import { canonicalString, isAwsSigningUrl, verifySnsSignature, type SnsEnvelope } from "@/lib/sns-signature";
 
 /**
  * Receives SES engagement events published to an SNS topic.
@@ -62,6 +62,25 @@ export async function POST(req: NextRequest) {
   const verified = await verifySnsSignature(envelope, fetchCertificate);
   if (!verified.ok) {
     console.warn(`[ses-webhook] rejected: ${verified.reason} (type=${envelope.Type ?? "none"})`);
+
+    // TEMPORARY DIAGNOSTIC — remove once the subscription confirms.
+    // Enough to replay the exact message offline and find the discrepancy,
+    // rather than guessing at it from a status code. The confirmation token
+    // this exposes is single-use and short-lived, but this is still a log of
+    // credential-shaped material and should not outlive the investigation.
+    if (process.env.SES_WEBHOOK_DEBUG === "1") {
+      console.warn(
+        "[ses-webhook] DEBUG " +
+          JSON.stringify({
+            signatureVersion: envelope.SignatureVersion,
+            signingCertURL: envelope.SigningCertURL,
+            fieldsPresent: Object.keys(envelope),
+            canonical: canonicalString(envelope),
+            signature: envelope.Signature,
+          }),
+      );
+    }
+
     return NextResponse.json({ error: "Invalid signature.", reason: verified.reason }, { status: 403 });
   }
 
