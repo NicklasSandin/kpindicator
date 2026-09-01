@@ -27,26 +27,40 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const rawKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const key = rawKey && !PLACEHOLDER_KEY.test(rawKey) ? rawKey : undefined;
 
+  /**
+   * Gates the pageview tracker until init has actually happened.
+   *
+   * React runs child effects before parent ones, so PostHogPageview fired its
+   * first capture() against an uninitialised PostHog — a silent no-op. With
+   * capture_pageview off, nothing else fired either, so anyone who read one
+   * page and left was never recorded. That is most visitors, which made the
+   * whole setup look configured while collecting nothing.
+   */
+  const [ready, setReady] = React.useState(false);
+
   React.useEffect(() => {
-    if (!key || posthog.__loaded) return;
-    posthog.init(key, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
-      defaults: "2026-05-30",
-      // We call capture("$pageview") manually on route change instead — the
-      // App Router doesn't fire the full-page loads autocapture relies on.
-      capture_pageview: false,
-      capture_pageleave: true,
-      person_profiles: "identified_only",
-    });
+    if (!key) return;
+
+    if (!posthog.__loaded) {
+      posthog.init(key, {
+        api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
+        defaults: "2026-05-30",
+        // We call capture("$pageview") manually on route change instead — the
+        // App Router doesn't fire the full-page loads autocapture relies on.
+        capture_pageview: false,
+        capture_pageleave: true,
+        person_profiles: "identified_only",
+      });
+    }
+
+    setReady(true);
   }, [key]);
 
   if (!key) return <>{children}</>;
 
   return (
     <PHProvider client={posthog}>
-      <React.Suspense fallback={null}>
-        <PostHogPageview />
-      </React.Suspense>
+      <React.Suspense fallback={null}>{ready ? <PostHogPageview /> : null}</React.Suspense>
       {children}
     </PHProvider>
   );
