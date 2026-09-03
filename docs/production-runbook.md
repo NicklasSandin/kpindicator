@@ -224,47 +224,96 @@ server is discarded. Check `git status` there first.
 
 ## Part 4 — Mail for kpindicator.com
 
-**Current state: the domain cannot receive mail at all.** No MX record, no SPF, no
-`_amazonses` TXT, DMARC at `p=none` with no `rua=`, no custom MAIL FROM. Nobody
-noticed because `CONTACT_NOTIFICATION_EMAIL` points at `@brandsentrypro.com`
-addresses, so nothing has ever needed to arrive here.
+Verified against the live server and the SES API on 2026-09-04. DNS is at
+Hostinger (`ns1/ns2.dns-parking.com`).
 
-For cold outreach that is fatal — replies bounce.
+### What works
 
-**DNS is at Hostinger** (`ns1/ns2.dns-parking.com`). Not Namecheap; BrandSentryPro
-is the one on `registrar-servers.com`.
+- **MX exists**: `10 smtp.google.com.` — Google Workspace's modern single-record
+  form, which replaces the five `aspmx` records. The domain can receive mail.
+- **Google DKIM is published** at `google._domainkey`.
+- **The SES configuration set is correctly wired.** `kpindicator-campaign-set`
+  exists and has an enabled destination sending BOUNCE, CLICK, COMPLAINT,
+  DELIVERY, OPEN and SEND to `arn:aws:sns:ap-southeast-2:881796983903:kpindicator-ses-events`
+  — the exact topic `/api/webhooks/ses` pins.
 
-BrandSentryPro is the working reference: Google Workspace for mailboxes, SES for app
-sending, both authorised in a single SPF record. Mirror it, with one difference —
-**KPIndicator's SES is `us-east-1`**, BSP's is `ap-southeast-2`. Verify the domain
-and generate DKIM in `us-east-1`.
+### What is broken
 
-Records to add at Hostinger:
+**1. `kpindicator.com` is not an SES identity.** Neither the domain nor
+`support@kpindicator.com` exists in the account:
 
 ```
-@        MX    1    aspmx.l.google.com.
-@        MX    5    alt1.aspmx.l.google.com.
-@        MX    5    alt2.aspmx.l.google.com.
-@        MX    10   alt3.aspmx.l.google.com.
-@        MX    10   alt4.aspmx.l.google.com.
+kpindicator.com:         NotFoundException — Email identity does not exist.
+support@kpindicator.com: NotFoundException — Email identity does not exist.
+```
+
+`SES_FROM_EMAIL` is set to `KPIndicator <support@kpindicator.com>`, so **every
+send is rejected**. Nothing has surfaced this because `notify.ts` no-ops without
+credentials and the notification recipients are all `@brandsentrypro.com`.
+
+**2. SPF does not authorise SES.** Published:
+
+```
+v=spf1 include:_spf.google.com ~all
+```
+
+Google is authorised, Amazon is not. Mail sent through SES fails SPF.
+
+**3. DMARC collects nothing.** `v=DMARC1; p=none;` with no `rua=`, so there is no
+feedback on what is failing.
+
+**4. No custom MAIL FROM.** `mail.kpindicator.com` has no MX.
+
+### The region is ap-southeast-2, not us-east-1
+
+The live config is `SES_REGION="ap-southeast-2"` — Sydney, the same region as
+BrandSentryPro, in the same shared AWS account (`881796983903`). Verify the domain
+and generate DKIM **there**. A domain verified in the wrong region is invisible to
+this app.
+
+### The account is on PROBATION
+
+```
+ProductionAccessEnabled: true
+EnforcementStatus:       PROBATION
+24h quota: 82,300   sent in last 24h: 17,668
+```
+
+`PROBATION` means AWS has already flagged this account — normally after a bounce or
+complaint rate breach — and is watching it. It is shared with `brandsentrypro.com`,
+`jumbobooking.com`, `makemoore.com` and `efficientemails.com`, so reputation is
+pooled across all of them.
+
+**Do not launch cold outreach from this account while it is on probation.** A cold
+list is the highest-bounce, highest-complaint traffic there is; one bad batch takes
+down sending for every domain in the account. Either clear the probation first, or
+use a separate account or a dedicated cold-outreach ESP for the campaign and keep
+SES for transactional mail.
+
+### Records to add at Hostinger
+
+Replace the existing SPF and DMARC records; add the two `mail` records:
+
+```
 @        TXT        "v=spf1 include:_spf.google.com include:amazonses.com ~all"
 _dmarc   TXT        "v=DMARC1; p=none; rua=mailto:dmarc@kpindicator.com; fo=1"
-mail     MX    10   feedback-smtp.us-east-1.amazonses.com.
+mail     MX    10   feedback-smtp.ap-southeast-2.amazonses.com.
 mail     TXT        "v=spf1 include:amazonses.com ~all"
 ```
 
-Plus DKIM, which is generated rather than written by hand: Google Workspace →
-Apps → Gmail → Authenticate email gives a `google._domainkey` TXT; SES → verify the
-**domain** (not the address) gives three CNAMEs.
+Then verify the **domain** (not the address) in SES ap-southeast-2, which generates
+three DKIM CNAMEs of the form `<token>._domainkey.kpindicator.com →
+<token>.dkim.amazonses.com`. Verifying the domain also covers every address on it,
+so `support@` starts working without a separate identity.
 
-`include:amazonses.com` covers every SES region — BSP additionally includes the
-region-specific host, which works but spends one of SPF's ten DNS lookups for
-nothing.
+`include:amazonses.com` covers all SES regions. BSP additionally includes the
+region-specific host, which works but spends one of SPF's ten lookups for nothing.
 
-**Send outreach from a person.** The templates sign off `— {{senderName}}`, and mail
-signed by a human but sent from `notifications@` reads as automated. Use
-`nicklas@kpindicator.com` for campaigns (set per-campaign via `fromName`/`fromEmail`,
-and verify that identity in SES); keep `notifications@` for transactional mail.
+### Send outreach from a person
+
+The templates sign off `— {{senderName}}`. Mail signed by a human but sent from
+`support@` reads as automated. Use `nicklas@kpindicator.com` for campaigns (set
+per-campaign via `fromName`/`fromEmail`); keep `support@` for transactional.
 
 ---
 
@@ -274,6 +323,8 @@ and verify that identity in SES); keep `notifications@` for transactional mail.
   `sk_live` and `whsec_`, the `kpindicator_prod` Postgres password, and the host's
   SSH password. Rotating the Stripe key means rotating it in BrandSentryPro's `.env`,
   since that is the shared source.
+- **SES enforcement is `PROBATION`.** Clear it before any cold-outreach batch, or
+  send the campaign from somewhere other than this shared account.
 - **`charge.refunded` is not wired.** A refunded order still reads `PAID`.
 - **The Scandinavian list is on hold** pending a decision on GDPR lawful basis.
   Denmark and Norway are strict; the US list is fine under CAN-SPAM.
