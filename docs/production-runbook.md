@@ -227,49 +227,49 @@ server is discarded. Check `git status` there first.
 Verified against the live server and the SES API on 2026-09-04. DNS is at
 Hostinger (`ns1/ns2.dns-parking.com`).
 
-### What works
+### Current state (verified 2026-09-04)
 
-- **MX exists**: `10 smtp.google.com.` — Google Workspace's modern single-record
-  form, which replaces the five `aspmx` records. The domain can receive mail.
-- **Google DKIM is published** at `google._domainkey`.
-- **The SES configuration set is correctly wired.** `kpindicator-campaign-set`
-  exists and has an enabled destination sending BOUNCE, CLICK, COMPLAINT,
-  DELIVERY, OPEN and SEND to `arn:aws:sns:ap-southeast-2:881796983903:kpindicator-ses-events`
-  — the exact topic `/api/webhooks/ses` pins.
-
-### What is broken
-
-**1. `kpindicator.com` is not an SES identity.** Neither the domain nor
-`support@kpindicator.com` exists in the account:
+Confirmed from the SES API and from the authoritative nameserver, not a cached
+resolver — Hostinger's TTL is 14400, so a change can take four hours to show up
+locally while already being live. Query `ns1.dns-parking.com` directly.
 
 ```
-kpindicator.com:         NotFoundException — Email identity does not exist.
-support@kpindicator.com: NotFoundException — Email identity does not exist.
+SES identity  kpindicator.com        verified=true  dkim=SUCCESS  signing=true
+MAIL FROM     mail.kpindicator.com   PENDING (SES re-checks on its own schedule)
+config set    kpindicator-campaign-set -> arn:aws:sns:ap-southeast-2:881796983903:kpindicator-ses-events
+              BOUNCE/CLICK/COMPLAINT/DELIVERY/OPEN/SEND, enabled
 ```
 
-`SES_FROM_EMAIL` is set to `KPIndicator <support@kpindicator.com>`, so **every
-send is rejected**. Nothing has surfaced this because `notify.ts` no-ops without
-credentials and the notification recipients are all `@brandsentrypro.com`.
+Published at Hostinger: Google MX (`smtp.google.com`), `google._domainkey`, three
+SES DKIM CNAMEs, `v=spf1 include:_spf.google.com include:amazonses.com ~all`,
+`v=DMARC1; p=none; rua=mailto:dmarc@kpindicator.com; fo=1`, and the MAIL FROM pair
+at `mail` (MX `feedback-smtp.ap-southeast-2.amazonses.com` + its own SPF).
 
-**2. SPF does not authorise SES.** Published:
-
-```
-v=spf1 include:_spf.google.com ~all
-```
-
-Google is authorised, Amazon is not. Mail sent through SES fails SPF.
-
-**3. DMARC collects nothing.** `v=DMARC1; p=none;` with no `rua=`, so there is no
-feedback on what is failing.
-
-**4. No custom MAIL FROM.** `mail.kpindicator.com` has no MX.
+Left to clean up: three dead DKIM CNAMEs from the first attempt
+(`litzfdc36…`, `xpoc2ccd7…`, `fqsdfxaqr2…`) are still in the zone. Harmless —
+different selectors — but they sign nothing.
 
 ### The region is ap-southeast-2, not us-east-1
 
-The live config is `SES_REGION="ap-southeast-2"` — Sydney, the same region as
-BrandSentryPro, in the same shared AWS account (`881796983903`). Verify the domain
-and generate DKIM **there**. A domain verified in the wrong region is invisible to
-this app.
+`SES_REGION="ap-southeast-2"` — Sydney, the same region and the same shared AWS
+account (`881796983903`) as BrandSentryPro. A domain verified in the wrong region
+is invisible to this app.
+
+That cost a full round trip. The first three DKIM tokens published to DNS resolved
+correctly and looked completely normal, but had been generated in **a different AWS
+account** — absent from all 24 regions of this one, and matching none of the five
+domain identities in it. DKIM tokens only sign mail from the account that issued
+them, and nothing about the record tells you which account that was.
+
+**Read the account ID in the SES console before publishing DKIM records.**
+`aws sts get-caller-identity` (or `GetCallerIdentityCommand`) answers it for
+whatever credentials you hold; it cannot tell you anything about an account you
+have no credentials for.
+
+The app authenticates as `arn:aws:iam::881796983903:user/ray.cerbolles` — a named
+person's IAM user, not a service account. Worth replacing: the app's mail stops the
+day that key is rotated, and it carries whatever permissions a human needs rather
+than SES-send-only.
 
 ### The account is on PROBATION
 
@@ -286,28 +286,23 @@ pooled across all of them.
 
 **Do not launch cold outreach from this account while it is on probation.** A cold
 list is the highest-bounce, highest-complaint traffic there is; one bad batch takes
-down sending for every domain in the account. Either clear the probation first, or
-use a separate account or a dedicated cold-outreach ESP for the campaign and keep
-SES for transactional mail.
+down sending for every domain in the account.
 
-### Records to add at Hostinger
+### The mailboxes are aliases, not accounts
 
-Replace the existing SPF and DMARC records; add the two `mail` records:
+The nine `@kpindicator.com` addresses (`hello`, `support`, `insights`, `alerts`,
+`emma`, `anna`, `laura`, `mikkel`, `ray`) are all aliases on the single Workspace
+user `ray@brandsentrypro.com`. Every reply lands in one inbox.
 
-```
-@        TXT        "v=spf1 include:_spf.google.com include:amazonses.com ~all"
-_dmarc   TXT        "v=DMARC1; p=none; rua=mailto:dmarc@kpindicator.com; fo=1"
-mail     MX    10   feedback-smtp.ap-southeast-2.amazonses.com.
-mail     TXT        "v=spf1 include:amazonses.com ~all"
-```
+Gmail will not offer an alias in the From dropdown until it is added under
+Settings → Accounts → "Send mail as" — one entry per alias. SES ignores aliases
+entirely: a verified domain identity sends from any address on the domain whether
+or not Workspace knows it exists, so the aliases matter for *receiving* only.
 
-Then verify the **domain** (not the address) in SES ap-southeast-2, which generates
-three DKIM CNAMEs of the form `<token>._domainkey.kpindicator.com →
-<token>.dkim.amazonses.com`. Verifying the domain also covers every address on it,
-so `support@` starts working without a separate identity.
-
-`include:amazonses.com` covers all SES regions. BSP additionally includes the
-region-specific host, which works but spends one of SPF's ten lookups for nothing.
+If the personal names are real people they need their own seats. If they are
+invented senders, note that CAN-SPAM prohibits false or misleading header
+information and sender identity falls under it, Denmark and Norway are stricter
+still, and a complaint lands on an account already at PROBATION.
 
 ### Send outreach from a person
 
