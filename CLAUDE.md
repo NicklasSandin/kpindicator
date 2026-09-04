@@ -17,7 +17,9 @@ npm run db:seed            # tsx prisma/seed.ts — deterministic demo data, saf
 npm run db:studio           # Prisma Studio, browse the DB in a UI
 ```
 
-There is no test suite (no test script, no test runner configured) — don't invent one.
+Tests: `npm test` runs the Node suite (`tsx --test tests/*.test.ts`, 36 tests). The PHP
+checkout has its own dependency-free suite at `checkout/tests/run.php`, which only runs on
+the server — PHP is not installed on the dev machine.
 
 Single-purpose one-offs against the DB (e.g. checking a value, cleaning up test rows) are
 normally done directly with `psql` / Prisma Studio rather than app code, since there's nothing

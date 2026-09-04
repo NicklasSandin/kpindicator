@@ -107,10 +107,26 @@ verification system-wide. SNS `SignatureVersion 1` is RSA-SHA1. OpenSSL does not
 say "policy forbids this" — it returns a failed verification, indistinguishable from
 a forged message.
 
-**Fix.** Set the SNS subscription to **Signature version 2** (SHA-256) in the SNS
-console — Subscriptions → Edit → Delivery policy. `sns-signature.ts` now probes for
-SHA-1 support once and returns the distinct reason `sha1_disabled_by_platform`, so
-the log names the platform instead of blaming the sender.
+**Fix.** `SignatureVersion` is an attribute of the **topic**, not of the
+subscription, and unset it defaults to `1`:
+
+```
+SetTopicAttributes  TopicArn=<topic>  AttributeName=SignatureVersion  AttributeValue=2
+```
+
+`sns-signature.ts` probes for SHA-1 support once and returns the distinct reason
+`sha1_disabled_by_platform`, so the log names the platform rather than the sender.
+
+**What it silently costs.** The subscription handshake is itself a signed message,
+so on a SHA-1 topic the `SubscriptionConfirmation` POST is rejected too and the
+subscription sits at `PendingConfirmation` indefinitely. SES then publishes every
+bounce and complaint into a topic with no confirmed subscriber. Nothing reports an
+error anywhere — the only symptom is events that never arrive.
+
+That is what the single `403` in the access log on 02 Sep actually meant. It went
+unnoticed until 04 Sep. There is no API to resend a confirmation: fix the topic,
+then call `Subscribe` again with the same protocol and endpoint, and the route
+auto-confirms.
 
 ```bash
 update-crypto-policies --show    # DEFAULT here means no SHA-1 signatures
@@ -198,6 +214,27 @@ network log. `localStorage` showed it initialising fine. Requests can be batched
 deferred, or sent after the pane stops recording. Check the SDK's own state before
 declaring an integration dead.
 
+### 11. A glob in a `sudo grep` expands as *you*, not as root
+
+**Symptom.** `sudo grep pattern /var/log/nginx/*access*.log` reports nothing, on a
+directory that plainly contains matching files.
+
+**Cause.** The shell expands the glob before `sudo` runs, as the unprivileged user.
+`/var/log/nginx` is root-only, so the pattern matches nothing, is passed through
+literally, and grep searches a path that does not exist — reporting no matches
+rather than an error you would notice.
+
+**Fix.** Put the whole command behind sudo, or name the file exactly:
+
+```bash
+sudo sh -c 'grep webhooks/ses /var/log/nginx/kpindicator.com-access.log'
+```
+
+This produced two wrong conclusions in one session — first that no webhook had ever
+reached the endpoint, then that events were not arriving. Both false. Note also that
+each vhost has its own log (`kpindicator.com-access.log`,
+`checkout.kpindicator.com.access.log`); `access.log` is only the fallback.
+
 ---
 
 ## Part 3 — Deploy checklist
@@ -238,16 +275,28 @@ SES identity  kpindicator.com        verified=true  dkim=SUCCESS  signing=true
 MAIL FROM     mail.kpindicator.com   PENDING (SES re-checks on its own schedule)
 config set    kpindicator-campaign-set -> arn:aws:sns:ap-southeast-2:881796983903:kpindicator-ses-events
               BOUNCE/CLICK/COMPLAINT/DELIVERY/OPEN/SEND, enabled
+SNS topic     SignatureVersion=2, HTTPS subscription to /api/webhooks/ses CONFIRMED
 ```
+
+Proven end to end on 2026-09-04 by sending through the configuration set: three
+`POST /api/webhooks/ses` in `kpindicator.com-access.log`, all `200` — the
+confirmation handshake, then SEND and DELIVERY. A test send to an address with no
+`EmailRecipient` row returns `recorded=0, unmatched=1`, which is the designed
+behaviour, not a fault.
 
 Published at Hostinger: Google MX (`smtp.google.com`), `google._domainkey`, three
 SES DKIM CNAMEs, `v=spf1 include:_spf.google.com include:amazonses.com ~all`,
 `v=DMARC1; p=none; rua=mailto:dmarc@kpindicator.com; fo=1`, and the MAIL FROM pair
 at `mail` (MX `feedback-smtp.ap-southeast-2.amazonses.com` + its own SPF).
 
-Left to clean up: three dead DKIM CNAMEs from the first attempt
-(`litzfdc36…`, `xpoc2ccd7…`, `fqsdfxaqr2…`) are still in the zone. Harmless —
-different selectors — but they sign nothing.
+The three dead DKIM CNAMEs from the first attempt have been removed; the zone is
+now exactly the records above and the two `google-site-verification` TXTs.
+
+**Outstanding:** DMARC reports go to `rua=mailto:dmarc@kpindicator.com`, but no
+`dmarc@` alias exists — the Workspace aliases are `hello`, `support`, `insights`,
+`alerts`, `emma`, `anna`, `laura`, `mikkel`, `ray`. Reports will bounce. Either add
+the alias or repoint `rua` at `alerts@kpindicator.com`. Until that is fixed there is
+no DMARC visibility, which is the whole point of `p=none`.
 
 ### The region is ap-southeast-2, not us-east-1
 
