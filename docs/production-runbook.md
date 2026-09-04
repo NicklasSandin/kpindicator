@@ -235,6 +235,28 @@ reached the endpoint, then that events were not arriving. Both false. Note also 
 each vhost has its own log (`kpindicator.com-access.log`,
 `checkout.kpindicator.com.access.log`); `access.log` is only the fallback.
 
+### 12. `RCPT TO` proves nothing against Google's MX
+
+**Symptom.** You probe an address over SMTP to check whether a Workspace alias
+exists, get `250 2.1.5 OK`, and conclude it does.
+
+**Cause.** `smtp.google.com` accepts every recipient at the `RCPT TO` stage for
+this domain and decides deliverability afterwards. A deliberately absurd address
+gets the same `250` as a real one.
+
+**Fix.** Always probe a known-bad control alongside the address in question. If the
+control also returns `250`, the test is inconclusive — go read the admin console,
+or wait for real mail to arrive.
+
+```
+support@kpindicator.com      -> 250 OK   (exists)
+zzq7x4nope@kpindicator.com   -> 250 OK   (does not exist)
+```
+
+The general form of this, and of the `is_writable()` and `sudo`-glob entries above:
+**a check that cannot fail is not a check.** Give every probe a control that should
+fail, and confirm it does.
+
 ---
 
 ## Part 3 — Deploy checklist
